@@ -1247,3 +1247,317 @@ void displayFile() {
     ]
   }
 };
+
+
+// ========================================================
+// UNIVERSAL EXHAUSTIVE LINE-BY-LINE EXPLAINER ENGINE
+// Provides complete, deep explanation for EVERY SINGLE LINE
+// ========================================================
+function getUniversalLineExplanation(lineText, lineNum, programKey) {
+  const trimmed = lineText.trim();
+  
+  if (!trimmed) {
+    return {
+      title: "Blank Line",
+      simple: "Empty line used for code readability and visual separation between logical blocks.",
+      underTheHood: "Ignored by the C compiler. Occupies 0 bytes in the compiled binary.",
+      vivaTip: "Clean formatting and indentation make programs readable and help score higher marks in lab exams."
+    };
+  }
+
+  // Header Files
+  if (trimmed.startsWith("#include<stdio.h>") || trimmed.startsWith("#include <stdio.h>")) {
+    return {
+      title: "Header File: Standard Input Output (<stdio.h>)",
+      simple: "Includes the standard I/O library so the program can use functions like printf() and scanf().",
+      underTheHood: "The C preprocessor (#) pastes declarations for standard stream buffers (stdin, stdout) into your program before compilation.",
+      vivaTip: "Viva Question: What does 'stdio' stand for? Standard Input Output. Why is '#' used? It's a preprocessor directive."
+    };
+  }
+  if (trimmed.startsWith("#include<conio.h>") || trimmed.startsWith("#include <conio.h>")) {
+    return {
+      title: "Header File: Console Input Output (<conio.h> - Turbo C Specific)",
+      simple: "Includes Turbo C console functions, specifically clrscr() (clear screen) and getch() (pause screen).",
+      underTheHood: "Directly accesses DOS/BIOS interrupt routines for text video display in Turbo C's 16-bit MS-DOS environment.",
+      vivaTip: "Viva Question: Is conio.h a standard ANSI C header? NO! It is a Borland/Turbo C specific header."
+    };
+  }
+  if (trimmed.startsWith("#include<math.h>") || trimmed.startsWith("#include <math.h>")) {
+    return {
+      title: "Header File: Mathematical Functions (<math.h>)",
+      simple: "Includes mathematical operations like sqrt() for square roots and pow() for powers.",
+      underTheHood: "Links mathematical floating-point routines. In GCC, you link it with -lm; in Turbo C, it is built-in.",
+      vivaTip: "Viva Question: What data type does sqrt() return? It returns a double/float value."
+    };
+  }
+  if (trimmed.startsWith("#include<string.h>") || trimmed.startsWith("#include <string.h>")) {
+    return {
+      title: "Header File: String Handling Library (<string.h>)",
+      simple: "Includes string functions like strlen() (length), strcpy() (copy), and strcmp() (compare).",
+      underTheHood: "Provides byte-level manipulation routines that scan contiguous character arrays until the '\\0' null byte.",
+      vivaTip: "Viva Question: Why do we need string.h? Because C has no native 'string' type; strings are character arrays."
+    };
+  }
+  if (trimmed.startsWith("#include<ctype.h>") || trimmed.startsWith("#include <ctype.h>")) {
+    return {
+      title: "Header File: Character Classification & Conversion (<ctype.h>)",
+      simple: "Provides functions to test characters: isalpha(), isdigit(), isspace(), and convert case: tolower(), toupper().",
+      underTheHood: "Uses fast ASCII lookup tables to check character bitmasks without requiring multiple slow if-statements.",
+      vivaTip: "Viva Question: What does tolower('A') return? It returns 'a' (ASCII 97)."
+    };
+  }
+  if (trimmed.startsWith("#include<stdlib.h>") || trimmed.startsWith("#include <stdlib.h>")) {
+    return {
+      title: "Header File: Standard Utility Library (<stdlib.h>)",
+      simple: "Includes general utility functions like exit() to terminate the program and malloc()/free() for dynamic memory.",
+      underTheHood: "Interfaces directly with runtime memory allocation and OS process termination codes.",
+      vivaTip: "Viva Question: What header file contains malloc() and exit()? <stdlib.h>."
+    };
+  }
+
+  // Preprocessor Macro
+  if (trimmed.startsWith("#define")) {
+    return {
+      title: "Preprocessor Macro Constant (#define)",
+      simple: `Defines a global symbolic constant: '${trimmed}'. Wherever this name appears in code, the compiler replaces it before compiling.`,
+      underTheHood: "Textual replacement by the preprocessor. Does not allocate variable storage in RAM.",
+      vivaTip: "Viva Question: Difference between #define and const? #define is handled by preprocessor without memory allocation; const has data type and storage."
+    };
+  }
+
+  // Function Declarations
+  if (trimmed.includes("factorial(int)") || trimmed.includes("find_ncr") || trimmed.includes("find_npr") || trimmed.includes("strcount(") || trimmed.includes("createFile()") || trimmed.includes("appendFile()") || trimmed.includes("displayFile()")) {
+    if (trimmed.endsWith(";")) {
+      return {
+        title: "Function Prototype / Declaration",
+        simple: "Tells the C compiler in advance: 'This function exists, here is its return type, and here are its parameters.'",
+        underTheHood: "Allows main() to call this function safely even if the full function body is written below main().",
+        vivaTip: "Viva Question: What is a function prototype? An advance declaration specifying function name, return type, and argument list."
+      };
+    }
+  }
+
+  // main() Entry Point
+  if (trimmed.startsWith("main()") || trimmed.startsWith("void main()") || trimmed.startsWith("int main()")) {
+    return {
+      title: "Main Function: Program Entry Point",
+      simple: "The starting point of the entire program. Operating System calls this function first.",
+      underTheHood: "Operating system sets up the execution Stack Frame for main and initializes program registers.",
+      vivaTip: "Viva Question: Can a C program have multiple main() functions? NO, exactly one main() is required."
+    };
+  }
+
+  // clrscr()
+  if (trimmed.startsWith("clrscr();") || trimmed.includes("clrscr()")) {
+    return {
+      title: "Clear Screen Function: clrscr()",
+      simple: "Wipes out all previous text and outputs from the Turbo C MS-DOS black screen.",
+      underTheHood: "Calls DOS video interrupt (INT 10h) to clear the active 80x25 text console buffer and moves cursor to top-left (0,0).",
+      vivaTip: "Viva Question: Which header file is required for clrscr()? <conio.h>."
+    };
+  }
+
+  // getch()
+  if (trimmed.startsWith("getch();") || trimmed.includes("getch()")) {
+    return {
+      title: "Screen Freeze Function: getch()",
+      simple: "Freezes the Turbo C output screen and waits until you press any key on your keyboard.",
+      underTheHood: "Halts CPU execution waiting for a single keystroke from the BIOS keyboard buffer without echoing the character to screen.",
+      vivaTip: "Viva Question: Why is getch() necessary in Turbo C? Without getch(), Turbo C prints output and closes the DOS window instantly before you can see it!"
+    };
+  }
+
+  // Return Statement
+  if (trimmed.startsWith("return")) {
+    return {
+      title: "Return Statement",
+      simple: "Exits the current function and sends a result value back to the caller.",
+      underTheHood: "Pops the current stack frame, places return value into CPU register (EAX/AX), and jumps back to return address.",
+      vivaTip: "Viva Question: What does 'return 0;' in main() mean? It signals successful execution (no errors) to the operating system."
+    };
+  }
+
+  // Variable Declarations
+  if (/^(int|float|double|char|long)\s+/.test(trimmed) && trimmed.endsWith(";")) {
+    return {
+      title: "Variable Declaration & Memory Allocation",
+      simple: `Allocates storage in RAM for variables: '${trimmed}'.`,
+      underTheHood: "Reserves bytes in the active Stack Frame: 'int' takes 2 bytes (Turbo C) or 4 bytes (modern C); 'float' takes 4 bytes; 'char' takes 1 byte.",
+      vivaTip: "Viva Question: What size is an integer in Turbo C? In 16-bit Turbo C, int is 2 bytes (-32,768 to 32,767). In modern 32/64-bit C, int is 4 bytes."
+    };
+  }
+
+  // Structure Definition
+  if (trimmed.startsWith("struct student") || trimmed.startsWith("struct student s;")) {
+    return {
+      title: "Structure Definition / Variable",
+      simple: "Creates a user-defined record grouping multiple related fields (roll, name, marks) into a single composite entity.",
+      underTheHood: "Reserves a single contiguous block of RAM containing memory for each member variable sequentially.",
+      vivaTip: "Viva Question: Difference between Structure and Array? Array holds homogeneous data (same type); Structure holds heterogeneous data (different types)."
+    };
+  }
+
+  // File Pointer
+  if (trimmed.startsWith("FILE *") || trimmed.includes("FILE *")) {
+    return {
+      title: "File Pointer Declaration (FILE *)",
+      simple: "Declares a pointer to a FILE stream structure used for reading from or writing to files on disk.",
+      underTheHood: "FILE is a typedef struct in stdio.h holding the file descriptor, stream buffer position, error flags, and EOF indicator.",
+      vivaTip: "Viva Question: What does fopen() return if the file cannot be opened? It returns NULL."
+    };
+  }
+
+  // printf statements
+  if (trimmed.startsWith("printf(")) {
+    return {
+      title: "Output Statement: printf()",
+      simple: `Displays formatted text or calculations onto the Turbo C output screen: '${trimmed}'.`,
+      underTheHood: "Parses format specifiers (%d for int, %f for float, %s for string, %c for char) and flushes characters to standard output (stdout).",
+      vivaTip: "Viva Question: What does printf() return? It returns the total number of characters printed successfully!"
+    };
+  }
+
+  // scanf statements
+  if (trimmed.startsWith("scanf(")) {
+    return {
+      title: "Input Statement: scanf()",
+      simple: `Waits for user input from the keyboard and stores it into variables: '${trimmed}'.`,
+      underTheHood: "Reads keyboard buffer from stdin, parses input matching format specifiers, and writes directly into memory addresses supplied via '&'.",
+      vivaTip: "Viva Question: Why is '&' required in scanf? Because C passes by value; scanf needs the memory address (&a) to modify your variable directly!"
+    };
+  }
+
+  // gets / puts
+  if (trimmed.startsWith("gets(")) {
+    return {
+      title: "String Input: gets()",
+      simple: "Reads an entire line of text from keyboard including spaces until Enter key is pressed.",
+      underTheHood: "Stores characters into character array and appends '\\0' (null character) at the end.",
+      vivaTip: "Viva Question: Why use gets() instead of scanf(\"%s\")? scanf(\"%s\") stops reading at the first space! gets() reads strings with spaces."
+    };
+  }
+  if (trimmed.startsWith("puts(")) {
+    return {
+      title: "String Output: puts()",
+      simple: "Outputs string to the console screen and automatically appends a newline ('\\n').",
+      underTheHood: "Transfers character array to stdout until null byte '\\0' is reached, then writes newline byte.",
+      vivaTip: "Viva Question: Difference between puts() and printf(\"%s\")? puts() automatically appends a newline '\\n'."
+    };
+  }
+
+  // For Loops
+  if (trimmed.startsWith("for(") || trimmed.startsWith("for (")) {
+    return {
+      title: "For Loop Control Header",
+      simple: `Controls repetition: '${trimmed}'. Has 3 parts: Initialization, Condition Check, and Step Increment.`,
+      underTheHood: "Initializes counter variable, checks condition (CMP instruction). If true, enters loop body; after execution, increments counter (INC instruction) and repeats.",
+      vivaTip: "Viva Question: Can any of the 3 parts in for(;;) be omitted? YES! for(;;) with all omitted creates an infinite loop."
+    };
+  }
+
+  // While Loops
+  if (trimmed.startsWith("while(") || trimmed.startsWith("while (")) {
+    return {
+      title: "While Loop Control Header",
+      simple: `Entry-controlled loop: '${trimmed}'. Tests condition before every iteration. Continues as long as condition evaluates to true.`,
+      underTheHood: "Evaluates boolean expression. If 0 (false), jumps past loop body. If non-zero (true), executes body and jumps back to re-evaluate.",
+      vivaTip: "Viva Question: Difference between while and do-while? while checks condition BEFORE entering (may execute 0 times); do-while checks AFTER (guaranteed to execute at least once)."
+    };
+  }
+
+  // Do-While
+  if (trimmed.startsWith("do {") || trimmed.startsWith("do")) {
+    return {
+      title: "Do-While Loop Start",
+      simple: "Exit-controlled loop header. Guarantees the body executes AT LEAST ONCE before condition is checked.",
+      underTheHood: "Enters body unconditionally on the first pass.",
+      vivaTip: "Viva Question: Where is do-while typically used? Perfect for menu-driven programs where menu must be displayed at least once."
+    };
+  }
+
+  // Switch Case
+  if (trimmed.startsWith("switch(") || trimmed.startsWith("switch (")) {
+    return {
+      title: "Switch Statement Header",
+      simple: `Multi-way branching statement: '${trimmed}'. Tests an expression against multiple constant case values.`,
+      underTheHood: "Compiler builds a jump table in memory for fast O(1) direct branching to matching case.",
+      vivaTip: "Viva Question: What data types are allowed in switch? Only integer or character types (int, char, enum). Floats are NOT allowed!"
+    };
+  }
+  if (trimmed.startsWith("case ") || trimmed.startsWith("case '")) {
+    return {
+      title: "Switch Case Branch Label",
+      simple: `Branch target: '${trimmed}'. Executes if the switch expression matches this value.`,
+      underTheHood: "Assembly label that receives control if comparison matches.",
+      vivaTip: "Viva Question: What happens if 'break' is missing after a case? Fall-through occurs! Code continues executing into the next case."
+    };
+  }
+  if (trimmed.startsWith("break;")) {
+    return {
+      title: "Break Statement",
+      simple: "Immediately terminates the enclosing switch statement or loop and jumps to the code following it.",
+      underTheHood: "Unconditional JMP instruction to the memory address immediately after the loop/switch block.",
+      vivaTip: "Viva Question: Does break exit if-statements? NO! break only exits loops (for, while, do-while) and switch statements."
+    };
+  }
+  if (trimmed.startsWith("default:")) {
+    return {
+      title: "Default Case Label",
+      simple: "Catches any value that didn't match any preceding case (handles invalid choices or fallback behavior).",
+      underTheHood: "Executed if no other case matched.",
+      vivaTip: "Viva Question: Is default required in switch? NO, it is optional, but recommended for clean error handling."
+    };
+  }
+
+  // If / Else If / Else
+  if (trimmed.startsWith("if (") || trimmed.startsWith("if(")) {
+    return {
+      title: "If Decision Condition",
+      simple: `Tests conditional expression: '${trimmed}'. Executes the enclosed block only if condition evaluates to true (non-zero).`,
+      underTheHood: "Performs comparison (CMP) and conditional jump (JNE/JE) skipping the block if false.",
+      vivaTip: "Viva Question: In C, what numbers represent true and false? 0 is FALSE; ANY non-zero number (1, -5, 99) is TRUE."
+    };
+  }
+  if (trimmed.startsWith("else if(") || trimmed.startsWith("else if (")) {
+    return {
+      title: "Else-If Ladder Step",
+      simple: `Secondary condition: '${trimmed}'. Evaluated ONLY if the preceding if/else-if was false.`,
+      underTheHood: "Chained conditional jumps allowing multi-stage decision trees.",
+      vivaTip: "Viva Question: What is an else-if ladder? A sequential chain of conditions where only the first true condition executes."
+    };
+  }
+  if (trimmed.startsWith("else")) {
+    return {
+      title: "Else Fallback Block",
+      simple: "Executes when ALL preceding if and else-if conditions evaluate to false.",
+      underTheHood: "Fallback code block reached when all prior branch jumps fail.",
+      vivaTip: "Viva Question: Can an 'else' exist without an 'if'? NO, else must always be paired with an if."
+    };
+  }
+
+  // Braces
+  if (trimmed === "{") {
+    return {
+      title: "Block Start (Opening Brace '{')",
+      simple: "Opens a compound statement block and defines a new local scope.",
+      underTheHood: "Variables declared inside this block exist only within this scope and are destroyed when block closes.",
+      vivaTip: "Viva Question: What is block scope? Variables declared inside {} are not visible or accessible outside the braces."
+    };
+  }
+  if (trimmed === "}" || trimmed === "};") {
+    return {
+      title: "Block End (Closing Brace '}')",
+      simple: "Closes the compound statement block. Destroys any local variables declared within this block.",
+      underTheHood: "Compiler adjusts stack pointer to pop any local variables allocated in this scope.",
+      vivaTip: "Viva Question: What is stack pop? Discarding temporary local variables when exiting a function or block."
+    };
+  }
+
+  // Calculations / Assignments
+  return {
+    title: "Expression / Calculation Statement",
+    simple: `Executes computation or variable assignment: '${trimmed}'.`,
+    underTheHood: "CPU evaluates right-hand side using Arithmetic Logic Unit (ALU) and stores result in memory location of left-hand side variable.",
+    vivaTip: "Viva Question: What is the assignment operator in C? '=' (single equal sign). '==' (double equal) is the equality comparison operator!"
+  };
+}

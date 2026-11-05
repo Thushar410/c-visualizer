@@ -1,13 +1,14 @@
 /**
- * C-Viz Main Application Controller — Shree Devi College Turbo C Lab Manual Edition
+ * C-Viz Main Application Controller — Complete Line-by-Line Turbo C Lab Edition
  */
 
 // State
 let currentProgramKey = "partA_prog1";
-let currentStepIndex = 0;
+let currentLineIndex = 0; // 0-based index of lines
 let isPlaying = false;
 let playInterval = null;
 let playSpeed = 1500;
+let currentCodeLines = [];
 
 // DOM Elements
 const programSelect = document.getElementById("programSelect");
@@ -18,7 +19,17 @@ const stepNextBtn = document.getElementById("stepNextBtn");
 const stepCounter = document.getElementById("stepCounter");
 const stepSlider = document.getElementById("stepSlider");
 const speedSelect = document.getElementById("speedSelect");
-const explanationText = document.getElementById("explanationText");
+
+// Inspector Elements
+const inspectorLineBadge = document.getElementById("inspectorLineBadge");
+const inspectorLineTitle = document.getElementById("inspectorLineTitle");
+const inspectorCodePreview = document.getElementById("inspectorCodePreview");
+const inspectorSimpleText = document.getElementById("inspectorSimpleText");
+const inspectorUnderTheHood = document.getElementById("inspectorUnderTheHood");
+const inspectorVivaTip = document.getElementById("inspectorVivaTip");
+
+// Tab Containers
+const allLinesCardsContainer = document.getElementById("allLinesCardsContainer");
 const functionsContainer = document.getElementById("functionsContainer");
 const loopsContainer = document.getElementById("loopsContainer");
 const stackContainer = document.getElementById("stackContainer");
@@ -32,13 +43,15 @@ const modalProgramTitle = document.getElementById("modalProgramTitle");
 const vivaQuestionsList = document.getElementById("vivaQuestionsList");
 
 // Tabs
+const tabAllLinesBtn = document.getElementById("tabAllLinesBtn");
 const tabRolesBtn = document.getElementById("tabRolesBtn");
 const tabMemoryBtn = document.getElementById("tabMemoryBtn");
+const tabAllLinesContent = document.getElementById("tabAllLinesContent");
 const tabRolesContent = document.getElementById("tabRolesContent");
 const tabMemoryContent = document.getElementById("tabMemoryContent");
 
 /**
- * Initialize Application
+ * Initialize
  */
 function init() {
   loadProgram(currentProgramKey);
@@ -46,39 +59,41 @@ function init() {
 }
 
 /**
- * Load a Lab Program
+ * Load Program
  */
 function loadProgram(key) {
   currentProgramKey = key;
-  currentStepIndex = 0;
+  currentLineIndex = 0;
   pauseAnimation();
 
   const prog = LAB_PROGRAMS[key];
   if (!prog) return;
 
-  renderCodeLines(prog.code);
+  currentCodeLines = prog.code.split("\n");
+
+  renderCodeLines(currentCodeLines);
+  renderAllLinesCards(currentCodeLines);
   renderFunctionRoles(prog.functionRoles || []);
   renderLoopBreakdowns(prog.loopBreakdown || []);
   renderVivaModalContent(prog);
 
-  stepSlider.max = Math.max(0, prog.steps.length - 1);
+  stepSlider.max = Math.max(0, currentCodeLines.length - 1);
   stepSlider.value = 0;
 
-  renderCurrentStep();
+  inspectLine(0);
 }
 
 /**
- * Render Code Lines with Line Numbers
+ * Render Code Lines in Left Editor
  */
-function renderCodeLines(code) {
+function renderCodeLines(lines) {
   codeLinesContainer.innerHTML = "";
-  const lines = code.split("\n");
 
   lines.forEach((lineText, idx) => {
     const lineNum = idx + 1;
     const lineDiv = document.createElement("div");
     lineDiv.className = "code-line";
-    lineDiv.dataset.lineNum = lineNum;
+    lineDiv.dataset.lineIndex = idx;
 
     const numSpan = document.createElement("span");
     numSpan.className = "line-num";
@@ -91,15 +106,9 @@ function renderCodeLines(code) {
     lineDiv.appendChild(numSpan);
     lineDiv.appendChild(contentSpan);
 
-    // Jump to step on click
     lineDiv.addEventListener("click", () => {
-      const prog = LAB_PROGRAMS[currentProgramKey];
-      if (!prog) return;
-      const stepIdx = prog.steps.findIndex(s => s.line === lineNum);
-      if (stepIdx !== -1) {
-        currentStepIndex = stepIdx;
-        renderCurrentStep();
-      }
+      pauseAnimation();
+      inspectLine(idx);
     });
 
     codeLinesContainer.appendChild(lineDiv);
@@ -108,7 +117,7 @@ function renderCodeLines(code) {
 
 function formatCodeLine(text) {
   if (!text.trim()) return "&nbsp;";
-  if (text.trim().startsWith("//")) {
+  if (text.trim().startsWith("//") || text.trim().startsWith("/*")) {
     return `<span style="color: #8b949e; font-style: italic;">${escapeHtml(text)}</span>`;
   }
   return escapeHtml(text);
@@ -119,121 +128,112 @@ function escapeHtml(text) {
 }
 
 /**
- * Render Role of Functions
+ * Render All Line Explanation Cards in Right Tab 1
  */
-function renderFunctionRoles(funcs) {
-  functionsContainer.innerHTML = "";
-  if (funcs.length === 0) {
-    functionsContainer.innerHTML = `<p style="color: var(--text-muted); font-size: 13px;">Standard main() function.</p>`;
-    return;
-  }
+function renderAllLinesCards(lines) {
+  allLinesCardsContainer.innerHTML = "";
 
-  funcs.forEach(f => {
+  lines.forEach((lineText, idx) => {
+    const lineNum = idx + 1;
+    const info = getUniversalLineExplanation(lineText, lineNum, currentProgramKey);
+
     const card = document.createElement("div");
-    card.className = "role-card";
+    card.className = "line-card";
+    card.id = `line-card-${idx}`;
+    card.dataset.lineIndex = idx;
+
     card.innerHTML = `
-      <div class="role-card-header">
-        <span class="role-func-name">${f.name}</span>
-        <span class="role-badge">${f.role}</span>
+      <div class="line-card-header">
+        <span class="line-card-badge">Line ${lineNum}</span>
+        <span class="line-card-title">${info.title}</span>
       </div>
-      <p class="role-desc">${f.desc}</p>
+      <div class="line-card-code">${escapeHtml(lineText.trim() || "(blank line)")}</div>
+      <p class="line-card-simple"><strong>What it does:</strong> ${info.simple}</p>
+      <div class="line-card-viva"><strong>🎓 Viva Point:</strong> ${info.vivaTip}</div>
     `;
-    functionsContainer.appendChild(card);
+
+    card.addEventListener("click", () => {
+      pauseAnimation();
+      inspectLine(idx);
+    });
+
+    allLinesCardsContainer.appendChild(card);
   });
 }
 
 /**
- * Render Role of Loops & Conditions
+ * Inspect a Specific Line (Updates Inspector Box & Highlights)
  */
-function renderLoopBreakdowns(loops) {
-  loopsContainer.innerHTML = "";
-  if (loops.length === 0) {
-    loopsContainer.innerHTML = `<p style="color: var(--text-muted); font-size: 13px;">No loops used in this program.</p>`;
-    return;
-  }
+function inspectLine(index) {
+  if (index < 0) index = 0;
+  if (index >= currentCodeLines.length) index = currentCodeLines.length - 1;
+  currentLineIndex = index;
 
-  loops.forEach(l => {
-    const card = document.createElement("div");
-    card.className = "loop-card";
-
-    let detailsHtml = "";
-    if (l.details && l.details.length > 0) {
-      detailsHtml = `<ul class="loop-details-list">` + 
-        l.details.map(d => `<li>${d}</li>`).join("") + 
-        `</ul>`;
-    }
-
-    card.innerHTML = `
-      <div class="loop-header-tag">${l.header}</div>
-      <div class="loop-purpose">${l.purpose}</div>
-      ${detailsHtml}
-    `;
-    loopsContainer.appendChild(card);
-  });
-}
-
-/**
- * Render Viva Questions in Modal
- */
-function renderVivaModalContent(prog) {
-  modalProgramTitle.innerHTML = `<i data-lucide="graduation-cap"></i> ${prog.title} — Viva Q&A`;
-  vivaQuestionsList.innerHTML = "";
-
-  (prog.vivaQuestions || []).forEach((item, idx) => {
-    const div = document.createElement("div");
-    div.className = "viva-item";
-    div.innerHTML = `
-      <h4>Q${idx + 1}: ${item.q}</h4>
-      <p><strong>Answer for Examiner:</strong> ${item.a}</p>
-    `;
-    vivaQuestionsList.appendChild(div);
-  });
-  lucide.createIcons();
-}
-
-/**
- * Render Current Step
- */
-function renderCurrentStep() {
-  const prog = LAB_PROGRAMS[currentProgramKey];
-  if (!prog || !prog.steps || prog.steps.length === 0) return;
-
-  if (currentStepIndex >= prog.steps.length) {
-    currentStepIndex = prog.steps.length - 1;
-    pauseAnimation();
-  }
-  if (currentStepIndex < 0) currentStepIndex = 0;
-
-  const step = prog.steps[currentStepIndex];
+  const lineNum = index + 1;
+  const lineText = currentCodeLines[index];
+  const info = getUniversalLineExplanation(lineText, lineNum, currentProgramKey);
 
   // Update controls
-  stepCounter.textContent = `Step ${currentStepIndex + 1} / ${prog.steps.length}`;
-  stepSlider.value = currentStepIndex;
+  stepCounter.textContent = `Line ${lineNum} / ${currentCodeLines.length}`;
+  stepSlider.value = index;
 
-  // Highlight active line
+  // Highlight in Left Editor
   document.querySelectorAll(".code-line").forEach(l => l.classList.remove("active-line"));
-  if (step.line) {
-    const activeLineEl = document.querySelector(`.code-line[data-line-num="${step.line}"]`);
-    if (activeLineEl) {
-      activeLineEl.classList.add("active-line");
-      activeLineEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  const activeLineEl = document.querySelector(`.code-line[data-line-index="${index}"]`);
+  if (activeLineEl) {
+    activeLineEl.classList.add("active-line");
+    activeLineEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+
+  // Highlight in Right Tab 1 Cards
+  document.querySelectorAll(".line-card").forEach(c => c.classList.remove("active-card"));
+  const activeCardEl = document.getElementById(`line-card-${index}`);
+  if (activeCardEl) {
+    activeCardEl.classList.add("active-card");
+    if (tabAllLinesBtn.classList.contains("active")) {
+      activeCardEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }
   }
 
-  // Update explanation
-  explanationText.textContent = step.explanation;
+  // Update Left Inspector Box
+  inspectorLineBadge.textContent = `Line ${lineNum}`;
+  inspectorLineTitle.textContent = info.title;
+  inspectorCodePreview.textContent = lineText.trim() || "(blank line)";
+  inspectorSimpleText.textContent = info.simple;
+  inspectorUnderTheHood.textContent = info.underTheHood;
+  inspectorVivaTip.textContent = info.vivaTip;
 
-  // Render RAM
-  renderStack(step.stack || []);
+  // Update RAM simulation
+  updateMemorySimulation(index);
+}
 
-  // Render Terminal
-  renderTerminal(step.terminal || []);
+/**
+ * Update RAM Memory Simulation based on line position
+ */
+function updateMemorySimulation(index) {
+  const prog = LAB_PROGRAMS[currentProgramKey];
+  if (!prog) return;
+
+  const steps = prog.steps || [];
+  if (steps.length === 0) return;
+
+  // Find step closest to this line
+  let activeStep = steps[0];
+  for (let s of steps) {
+    if (s.line <= index + 1) {
+      activeStep = s;
+    }
+  }
+
+  // Render Stack
+  renderStack(activeStep.stack || []);
+  renderTerminal(activeStep.terminal || []);
 }
 
 function renderStack(stackData) {
   stackContainer.innerHTML = "";
   if (stackData.length === 0) {
-    stackContainer.innerHTML = `<div style="color: #64748b; font-size: 13px; text-align: center; padding: 15px;">Stack frame active</div>`;
+    stackContainer.innerHTML = `<div style="color: #64748b; font-size: 13px; text-align: center; padding: 15px;">Stack frame initialized</div>`;
     return;
   }
 
@@ -263,7 +263,62 @@ function renderTerminal(lines) {
 }
 
 /**
- * Play / Pause
+ * Render Functions & Loops
+ */
+function renderFunctionRoles(funcs) {
+  functionsContainer.innerHTML = "";
+  funcs.forEach(f => {
+    const card = document.createElement("div");
+    card.className = "role-card";
+    card.innerHTML = `
+      <div class="role-card-header">
+        <span class="role-func-name">${f.name}</span>
+        <span class="role-badge">${f.role}</span>
+      </div>
+      <p class="role-desc">${f.desc}</p>
+    `;
+    functionsContainer.appendChild(card);
+  });
+}
+
+function renderLoopBreakdowns(loops) {
+  loopsContainer.innerHTML = "";
+  loops.forEach(l => {
+    const card = document.createElement("div");
+    card.className = "loop-card";
+    let detailsHtml = "";
+    if (l.details && l.details.length > 0) {
+      detailsHtml = `<ul class="loop-details-list">` + 
+        l.details.map(d => `<li>${d}</li>`).join("") + 
+        `</ul>`;
+    }
+    card.innerHTML = `
+      <div class="loop-header-tag">${l.header}</div>
+      <div class="loop-purpose">${l.purpose}</div>
+      ${detailsHtml}
+    `;
+    loopsContainer.appendChild(card);
+  });
+}
+
+function renderVivaModalContent(prog) {
+  modalProgramTitle.innerHTML = `<i data-lucide="graduation-cap"></i> ${prog.title} — Viva Q&A`;
+  vivaQuestionsList.innerHTML = "";
+
+  (prog.vivaQuestions || []).forEach((item, idx) => {
+    const div = document.createElement("div");
+    div.className = "viva-item";
+    div.innerHTML = `
+      <h4>Q${idx + 1}: ${item.q}</h4>
+      <p><strong>Answer for Examiner:</strong> ${item.a}</p>
+    `;
+    vivaQuestionsList.appendChild(div);
+  });
+  lucide.createIcons();
+}
+
+/**
+ * Playback Controls
  */
 function togglePlayPause() {
   if (isPlaying) {
@@ -274,19 +329,17 @@ function togglePlayPause() {
 }
 
 function startAnimation() {
-  const prog = LAB_PROGRAMS[currentProgramKey];
-  if (currentStepIndex >= prog.steps.length - 1) {
-    currentStepIndex = 0;
+  if (currentLineIndex >= currentCodeLines.length - 1) {
+    currentLineIndex = 0;
   }
   isPlaying = true;
   playPauseBtn.innerHTML = `<i data-lucide="pause"></i> Pause`;
   lucide.createIcons();
 
   playInterval = setInterval(() => {
-    const p = LAB_PROGRAMS[currentProgramKey];
-    if (currentStepIndex < p.steps.length - 1) {
-      currentStepIndex++;
-      renderCurrentStep();
+    if (currentLineIndex < currentCodeLines.length - 1) {
+      currentLineIndex++;
+      inspectLine(currentLineIndex);
     } else {
       pauseAnimation();
     }
@@ -302,7 +355,7 @@ function pauseAnimation() {
 }
 
 /**
- * Event Listeners
+ * Setup Event Listeners
  */
 function setupEventListeners() {
   programSelect.addEventListener("change", (e) => loadProgram(e.target.value));
@@ -311,25 +364,23 @@ function setupEventListeners() {
 
   stepNextBtn.addEventListener("click", () => {
     pauseAnimation();
-    const p = LAB_PROGRAMS[currentProgramKey];
-    if (currentStepIndex < p.steps.length - 1) {
-      currentStepIndex++;
-      renderCurrentStep();
+    if (currentLineIndex < currentCodeLines.length - 1) {
+      currentLineIndex++;
+      inspectLine(currentLineIndex);
     }
   });
 
   stepPrevBtn.addEventListener("click", () => {
     pauseAnimation();
-    if (currentStepIndex > 0) {
-      currentStepIndex--;
-      renderCurrentStep();
+    if (currentLineIndex > 0) {
+      currentLineIndex--;
+      inspectLine(currentLineIndex);
     }
   });
 
   stepSlider.addEventListener("input", (e) => {
     pauseAnimation();
-    currentStepIndex = parseInt(e.target.value);
-    renderCurrentStep();
+    inspectLine(parseInt(e.target.value));
   });
 
   speedSelect.addEventListener("change", (e) => {
@@ -342,31 +393,24 @@ function setupEventListeners() {
 
   resetBtn.addEventListener("click", () => {
     pauseAnimation();
-    currentStepIndex = 0;
-    renderCurrentStep();
+    inspectLine(0);
   });
 
   clearConsoleBtn.addEventListener("click", () => {
     terminalOutput.innerHTML = `<span class="terminal-prompt">C:\\TURBOC3\\BIN\\TC.EXE</span>`;
   });
 
-  // Tab switching
+  // 3-Tab Navigation
+  tabAllLinesBtn.addEventListener("click", () => {
+    activateTab(tabAllLinesBtn, tabAllLinesContent);
+  });
+
   tabRolesBtn.addEventListener("click", () => {
-    tabRolesBtn.classList.add("active");
-    tabMemoryBtn.classList.remove("active");
-    tabRolesContent.classList.remove("hidden");
-    tabRolesContent.classList.add("active-content");
-    tabMemoryContent.classList.add("hidden");
-    tabMemoryContent.classList.remove("active-content");
+    activateTab(tabRolesBtn, tabRolesContent);
   });
 
   tabMemoryBtn.addEventListener("click", () => {
-    tabMemoryBtn.classList.add("active");
-    tabRolesBtn.classList.remove("active");
-    tabMemoryContent.classList.remove("hidden");
-    tabMemoryContent.classList.add("active-content");
-    tabRolesContent.classList.add("hidden");
-    tabRolesContent.classList.remove("active-content");
+    activateTab(tabMemoryBtn, tabMemoryContent);
   });
 
   // Modal
@@ -376,7 +420,7 @@ function setupEventListeners() {
     if (e.target === vivaModal) vivaModal.classList.add("hidden");
   });
 
-  // Keyboard navigation
+  // Arrow Keys
   window.addEventListener("keydown", (e) => {
     if (e.key === "ArrowRight") {
       stepNextBtn.click();
@@ -387,6 +431,18 @@ function setupEventListeners() {
       togglePlayPause();
     }
   });
+}
+
+function activateTab(btn, content) {
+  document.querySelectorAll(".panel-tab").forEach(b => b.classList.remove("active"));
+  document.querySelectorAll(".tab-content").forEach(c => {
+    c.classList.add("hidden");
+    c.classList.remove("active-content");
+  });
+
+  btn.classList.add("active");
+  content.classList.remove("hidden");
+  content.classList.add("active-content");
 }
 
 document.addEventListener("DOMContentLoaded", init);

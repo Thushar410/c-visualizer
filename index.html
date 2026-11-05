@@ -59,13 +59,13 @@
     </div>
   </header>
 
-  <!-- Main 3-Column / 2-Panel Layout -->
+  <!-- Main Layout -->
   <main class="main-layout">
-    <!-- Left Column: Source Code & Animation Playback -->
+    <!-- Left Column: Source Code & Line Inspector -->
     <section class="panel panel-code">
       <div class="panel-header">
         <span class="panel-title"><i data-lucide="file-code"></i> Turbo C Source Code</span>
-        <span class="panel-hint">💡 Click any line or step button to see execution</span>
+        <span class="panel-hint">💡 Click ANY line to inspect its full explanation</span>
       </div>
 
       <!-- Code Viewer with line numbers -->
@@ -76,19 +76,19 @@
       <!-- Playback Controls -->
       <div class="controls-bar">
         <div class="playback-controls">
-          <button id="stepPrevBtn" class="btn btn-icon" title="Previous Step (Left Arrow)">
+          <button id="stepPrevBtn" class="btn btn-icon" title="Previous Line (Left Arrow)">
             <i data-lucide="skip-back"></i>
           </button>
           <button id="playPauseBtn" class="btn btn-primary" title="Play / Pause Animation">
             <i data-lucide="play" id="playIcon"></i> Play
           </button>
-          <button id="stepNextBtn" class="btn btn-icon" title="Next Step (Right Arrow)">
+          <button id="stepNextBtn" class="btn btn-icon" title="Next Line (Right Arrow)">
             <i data-lucide="skip-forward"></i>
           </button>
         </div>
 
         <div class="step-progress-wrap">
-          <span id="stepCounter" class="step-counter">Step 0 / 0</span>
+          <span id="stepCounter" class="step-counter">Line 1 / 1</span>
           <input type="range" id="stepSlider" min="0" max="0" value="0" class="slider">
         </div>
 
@@ -102,53 +102,74 @@
         </div>
       </div>
 
-      <!-- Line-by-Line Execution Explanation Box -->
-      <div class="explanation-box" id="explanationBox">
-        <div class="explanation-header">
-          <i data-lucide="sparkles" class="icon-accent"></i>
-          <span class="explanation-title">What is happening right now:</span>
+      <!-- Dedicated Active Line Inspector Box -->
+      <div class="inspector-box" id="inspectorBox">
+        <div class="inspector-header">
+          <span id="inspectorLineBadge" class="inspector-badge">Line 1</span>
+          <span id="inspectorLineTitle" class="inspector-title">Line Explanation</span>
         </div>
-        <p id="explanationText" class="explanation-text">Press Play or Step Forward to start the visualization.</p>
+        
+        <div class="inspector-content">
+          <div class="inspector-code-preview" id="inspectorCodePreview">#include &lt;stdio.h&gt;</div>
+          
+          <div class="inspector-field">
+            <span class="field-label"><i data-lucide="check-circle" class="icon-accent"></i> What this line does (Simple English):</span>
+            <p id="inspectorSimpleText" class="field-value">Includes the standard input/output library.</p>
+          </div>
+
+          <div class="inspector-field">
+            <span class="field-label"><i data-lucide="cpu" class="icon-purple"></i> Turbo C &amp; Hardware Background Action:</span>
+            <p id="inspectorUnderTheHood" class="field-value">Preprocessor parses header declarations before compiling.</p>
+          </div>
+
+          <div class="inspector-field">
+            <span class="field-label"><i data-lucide="award" class="icon-gold"></i> Examiner Viva Question on this line:</span>
+            <p id="inspectorVivaTip" class="field-value">What does stdio stand for? Standard Input Output.</p>
+          </div>
+        </div>
       </div>
     </section>
 
-    <!-- Right Column: Functions & Loops Detailed Breakdown + RAM & Terminal -->
+    <!-- Right Column: 3 Study Tabs -->
     <section class="panel panel-visualizer">
-      <!-- Tabs to switch between: 1. Function & Loop Roles, 2. RAM Memory & Terminal -->
       <div class="panel-tabs">
-        <button id="tabRolesBtn" class="panel-tab active"><i data-lucide="cpu"></i> Role of Functions & Loops</button>
-        <button id="tabMemoryBtn" class="panel-tab"><i data-lucide="layers"></i> RAM Memory & Output</button>
+        <button id="tabAllLinesBtn" class="panel-tab active"><i data-lucide="list"></i> Every Line Explained</button>
+        <button id="tabRolesBtn" class="panel-tab"><i data-lucide="cpu"></i> Functions &amp; Loops</button>
+        <button id="tabMemoryBtn" class="panel-tab"><i data-lucide="layers"></i> RAM &amp; DOS Screen</button>
       </div>
 
-      <!-- TAB 1: Roles of Functions & Loops (THE CORE REQUIREMENT) -->
-      <div id="tabRolesContent" class="tab-content active-content">
-        <!-- Turbo C Info Banner -->
+      <!-- TAB 1: Complete Line-by-Line Guide for the entire program -->
+      <div id="tabAllLinesContent" class="tab-content active-content">
+        <div class="turboc-banner">
+          <i data-lucide="help-circle" class="icon-accent"></i>
+          <span>Click on any card below (or click a line in the code editor on the left) to jump directly to it!</span>
+        </div>
+        <div id="allLinesCardsContainer" class="all-lines-list">
+          <!-- Dynamically populated with a card for every single line of code! -->
+        </div>
+      </div>
+
+      <!-- TAB 2: Roles of Functions & Loops -->
+      <div id="tabRolesContent" class="tab-content hidden">
         <div class="turboc-banner">
           <i data-lucide="monitor" class="icon-accent"></i>
           <span><strong>Turbo C / Turbo C7 Tip:</strong> Uses <code>clrscr()</code> from <code>&lt;conio.h&gt;</code> to clear the screen and <code>getch()</code> at the end to hold the MS-DOS output window.</span>
         </div>
 
-        <!-- Role of Functions Section -->
         <div class="roles-section">
           <h3 class="section-heading"><i data-lucide="box"></i> 1. Role of Functions in this Program</h3>
-          <div id="functionsContainer" class="roles-cards-grid">
-            <!-- Dynamically populated with function cards -->
-          </div>
+          <div id="functionsContainer" class="roles-cards-grid"></div>
         </div>
 
-        <!-- Role of Loops & Branching Section -->
         <div class="roles-section">
-          <h3 class="section-heading"><i data-lucide="repeat"></i> 2. Role of Every Loop & Condition in this Program</h3>
-          <div id="loopsContainer" class="roles-cards-grid">
-            <!-- Dynamically populated with loop cards -->
-          </div>
+          <h3 class="section-heading"><i data-lucide="repeat"></i> 2. Role of Every Loop &amp; Condition</h3>
+          <div id="loopsContainer" class="roles-cards-grid"></div>
         </div>
       </div>
 
-      <!-- TAB 2: RAM Memory & Terminal Output -->
+      <!-- TAB 3: RAM Memory & Terminal Output -->
       <div id="tabMemoryContent" class="tab-content hidden">
         <div class="visualizer-content" id="visualizerCanvas">
-          <!-- Memory Cards -->
           <div class="memory-grid">
             <div class="memory-card stack-card">
               <div class="memory-card-header">
@@ -159,7 +180,6 @@
             </div>
           </div>
 
-          <!-- Terminal Output Console (Simulates Turbo C Output Screen) -->
           <div class="terminal-panel">
             <div class="terminal-header">
               <span><i data-lucide="terminal"></i> Turbo C Output Window (DOS Screen)</span>
@@ -181,9 +201,7 @@
         <h2 id="modalProgramTitle"><i data-lucide="graduation-cap"></i> Examiner Viva Questions</h2>
         <button id="closeModalBtn" class="btn-icon"><i data-lucide="x"></i></button>
       </div>
-      <div class="modal-body" id="vivaQuestionsList">
-        <!-- Dynamically injected viva Q&A -->
-      </div>
+      <div class="modal-body" id="vivaQuestionsList"></div>
     </div>
   </div>
 
