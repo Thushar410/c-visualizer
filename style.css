@@ -21,9 +21,10 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  -webkit-tap-highlight-color: transparent;
 }
 
-/* FIXED VIEWPORT: Lock document completely so whole page never scrolls */
+/* FIXED VIEWPORT: Lock document so whole page never scrolls awkwardly */
 html, body {
   height: 100%;
   max-height: 100vh;
@@ -35,18 +36,25 @@ html, body {
   flex-direction: column;
 }
 
-/* Header: Fixed 56px height */
+/* Header */
 .header {
-  height: 56px;
   background-color: var(--bg-card);
   border-bottom: 1px solid var(--border-color);
-  padding: 0 20px;
+  padding: 8px 16px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
   flex-shrink: 0;
   z-index: 50;
+}
+
+.header-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex: 1;
 }
 
 .logo-area {
@@ -68,6 +76,7 @@ html, body {
   border-radius: 8px;
   font-family: var(--font-mono);
   box-shadow: 0 0 12px rgba(56, 189, 248, 0.3);
+  flex-shrink: 0;
 }
 
 .logo-title {
@@ -99,7 +108,7 @@ html, body {
   align-items: center;
   gap: 8px;
   background: var(--bg-slot);
-  padding: 5px 12px;
+  padding: 6px 12px;
   border-radius: 8px;
   border: 1px solid var(--border-color);
   font-size: 12.5px;
@@ -115,6 +124,7 @@ html, body {
   outline: none;
   cursor: pointer;
   max-width: 360px;
+  width: 100%;
 }
 
 .select-input optgroup {
@@ -131,6 +141,7 @@ html, body {
 
 .header-actions {
   display: flex;
+  align-items: center;
   gap: 8px;
 }
 
@@ -139,7 +150,7 @@ html, body {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 5px 12px;
+  padding: 6px 12px;
   border-radius: 6px;
   font-size: 12px;
   font-weight: 600;
@@ -147,6 +158,7 @@ html, body {
   transition: all 0.2s ease;
   border: 1px solid transparent;
   text-decoration: none;
+  min-height: 32px;
 }
 
 .btn-primary { background: #2563eb; color: white; }
@@ -162,19 +174,55 @@ html, body {
   background: var(--bg-slot);
   border: 1px solid var(--border-color);
   color: var(--text-main);
-  padding: 5px 9px;
+  padding: 6px 10px;
   border-radius: 6px;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  min-height: 32px;
 }
 .btn-icon:hover { background: #30363d; color: var(--accent-cyan); }
 
 .btn-text { background: transparent; border: none; color: var(--text-muted); font-size: 12px; cursor: pointer; }
 .btn-text:hover { color: var(--text-main); }
 
-/* MAIN LAYOUT: Strictly 100% height - 56px header */
+/* MOBILE SEGMENTED VIEW SWITCHER (Hidden by default on Desktop) */
+.mobile-nav-bar {
+  display: none;
+  background-color: var(--bg-card);
+  border-bottom: 1px solid var(--border-color);
+  padding: 4px 8px;
+  gap: 6px;
+  flex-shrink: 0;
+  z-index: 40;
+}
+
+.mobile-nav-btn {
+  flex: 1;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-muted);
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 8px 4px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.mobile-nav-btn.active {
+  background: var(--bg-slot);
+  color: var(--accent-cyan);
+  border-color: rgba(56, 189, 248, 0.3);
+  font-weight: 700;
+}
+
+/* MAIN LAYOUT */
 .main-layout {
   height: calc(100vh - 56px);
   max-height: calc(100vh - 56px);
@@ -186,13 +234,7 @@ html, body {
   overflow: hidden;
 }
 
-@media (max-width: 1024px) {
-  .main-layout {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* PANELS: Fixed containers */
+/* PANELS */
 .panel {
   background-color: var(--bg-dark);
   display: flex;
@@ -237,26 +279,28 @@ html, body {
 
 .code-container {
   flex: 1 1 0;
-  min-height: 0; /* CRITICAL: Enables internal independent scroll */
+  min-height: 0;
   overflow-y: auto;
   overflow-x: auto;
   position: relative;
   background: #090d13;
   padding: 8px 0;
+  -webkit-overflow-scrolling: touch;
 }
 
 .code-lines {
   font-family: var(--font-mono);
   font-size: 13px;
-  line-height: 22px;
+  line-height: 24px;
 }
 
 .code-line {
   display: flex;
-  padding: 1px 14px;
+  padding: 2px 14px;
   cursor: pointer;
   transition: background-color 0.15s ease;
   position: relative;
+  min-height: 26px;
 }
 
 .code-line:hover {
@@ -275,6 +319,7 @@ html, body {
   text-align: right;
   margin-right: 16px;
   font-size: 12px;
+  flex-shrink: 0;
 }
 
 .line-content {
@@ -350,23 +395,24 @@ html, body {
   flex-shrink: 0;
   max-height: 260px;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .inspector-placeholder {
-  padding: 16px;
+  padding: 14px;
   text-align: center;
   color: var(--text-muted);
-  font-size: 13px;
+  font-size: 12.5px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 .inspector-placeholder i {
   color: var(--accent-cyan);
-  width: 24px;
-  height: 24px;
+  width: 22px;
+  height: 22px;
 }
 
 .inspector-header {
@@ -406,6 +452,7 @@ html, body {
   padding: 5px 8px;
   border-radius: 5px;
   color: #93c5fd;
+  word-break: break-all;
 }
 
 .inspector-field {
@@ -480,13 +527,14 @@ html, body {
 
 .tab-content {
   flex: 1 1 0;
-  min-height: 0; /* CRITICAL: Independent scroll for right side only! */
+  min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
   padding: 14px;
   display: flex;
   flex-direction: column;
   gap: 12px;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* All Lines List in Right Tab */
@@ -500,7 +548,7 @@ html, body {
   background: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: 8px;
-  padding: 9px 12px;
+  padding: 10px 12px;
   cursor: pointer;
   transition: all 0.2s ease;
   display: flex;
@@ -546,7 +594,7 @@ html, body {
   font-size: 12px;
   color: #93c5fd;
   background: #090d13;
-  padding: 3px 6px;
+  padding: 4px 7px;
   border-radius: 4px;
   white-space: pre-wrap;
   word-break: break-all;
@@ -892,4 +940,137 @@ html, body {
 
 .hidden {
   display: none !important;
+}
+
+/* ============================================================
+   📱 SMARTPHONE & TABLET RESPONSIVE STYLES (SCREEN <= 768px)
+   ============================================================ */
+@media (max-width: 768px) {
+  .desktop-only {
+    display: none !important;
+  }
+
+  /* Header adjustments for phone */
+  .header {
+    height: auto;
+    padding: 8px 12px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .header-top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+  }
+
+  .logo-title {
+    font-size: 14px;
+  }
+
+  .logo-sub {
+    display: none; /* Hide subtitle on tiny screens */
+  }
+
+  .btn-text-label {
+    display: none; /* Icon-only on mobile for cleaner header */
+  }
+
+  .preset-selector-wrap {
+    width: 100%;
+    padding: 6px 10px;
+  }
+
+  .select-input {
+    max-width: 100%;
+    font-size: 12px;
+  }
+
+  /* Show the mobile navigation switcher */
+  .mobile-nav-bar {
+    display: flex;
+  }
+
+  /* Main layout on phone: Full screen flex column */
+  .main-layout {
+    height: calc(100vh - 110px);
+    max-height: calc(100vh - 110px);
+    display: flex;
+    flex-direction: column;
+    grid-template-columns: none;
+    overflow: hidden;
+  }
+
+  /* View Switching on Mobile:
+     Only the view matching the active mobile-nav-btn is visible! */
+  .main-layout.mobile-view-code #panelCode {
+    display: flex;
+    flex: 1;
+    height: 100%;
+  }
+  .main-layout.mobile-view-code #panelVisualizer {
+    display: none;
+  }
+
+  .main-layout.mobile-view-all-lines #panelCode,
+  .main-layout.mobile-view-roles #panelCode,
+  .main-layout.mobile-view-dos #panelCode {
+    display: none;
+  }
+
+  .main-layout.mobile-view-all-lines #panelVisualizer,
+  .main-layout.mobile-view-roles #panelVisualizer,
+  .main-layout.mobile-view-dos #panelVisualizer {
+    display: flex;
+    flex: 1;
+    height: 100%;
+  }
+
+  /* Code line size on phone (comfortable for touch) */
+  .code-line {
+    padding: 3px 10px;
+    min-height: 28px;
+  }
+
+  .line-num {
+    margin-right: 12px;
+    width: 26px;
+    font-size: 11.5px;
+  }
+
+  .line-content {
+    font-size: 12.5px;
+  }
+
+  /* Controls bar on phone */
+  .controls-bar {
+    padding: 6px 10px;
+  }
+
+  .step-progress-wrap {
+    max-width: 150px;
+  }
+
+  /* Inspector on phone */
+  .inspector-box {
+    max-height: 48%;
+    padding: 10px 12px;
+  }
+
+  .inspector-code-preview {
+    font-size: 11.5px;
+  }
+
+  .field-value {
+    font-size: 12px;
+    padding-left: 14px;
+  }
+
+  /* Modal on phone */
+  .modal-card {
+    width: 95%;
+    max-height: 88vh;
+  }
 }

@@ -2,24 +2,38 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>C-Viz — Shree Devi College C Lab Exam Visualizer (Turbo C / C7)</title>
   <link rel="stylesheet" href="style.css">
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body class="bg-dark text-light antialiased">
-  <!-- Top Navigation Bar (Fixed 56px) -->
+  <!-- Top Navigation Bar (Responsive for Mobile & Desktop) -->
   <header class="header">
-    <div class="logo-area">
-      <div class="logo-icon">C</div>
-      <div>
-        <h1 class="logo-title">C-Viz <span class="badge">Turbo C Lab Exam Pro</span></h1>
-        <p class="logo-sub">Shree Devi College of Information Science — Complete Lab Manual (All 16 Programs)</p>
+    <div class="header-top-row">
+      <div class="logo-area">
+        <div class="logo-icon">C</div>
+        <div>
+          <h1 class="logo-title">C-Viz <span class="badge">Turbo C Lab Pro</span></h1>
+          <p class="logo-sub">Shree Devi College Lab Manual (All 16 Programs)</p>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <button id="vivaModalBtn" class="btn btn-outline" title="Exam & Viva Questions for this Program">
+          <i data-lucide="award"></i> <span class="btn-text-label">Viva Answers</span>
+        </button>
+        <button id="resetBtn" class="btn btn-secondary" title="Reset Simulation">
+          <i data-lucide="rotate-ccw"></i>
+        </button>
+        <a href="https://github.com/Thushar410/c-visualizer" target="_blank" class="btn btn-secondary" title="GitHub Repository">
+          <i data-lucide="github"></i>
+        </a>
       </div>
     </div>
 
-    <!-- Exam Program Selector -->
+    <!-- Exam Program Selector (Full width on mobile) -->
     <div class="preset-selector-wrap">
       <label for="programSelect"><i data-lucide="book-open"></i> Lab Program:</label>
       <select id="programSelect" class="select-input">
@@ -45,31 +59,27 @@
         </optgroup>
       </select>
     </div>
-
-    <div class="header-actions">
-      <button id="vivaModalBtn" class="btn btn-outline" title="Exam & Viva Questions for this Program">
-        <i data-lucide="award"></i> Viva Answers
-      </button>
-      <button id="resetBtn" class="btn btn-secondary" title="Reset Simulation">
-        <i data-lucide="rotate-ccw"></i> Reset
-      </button>
-      <a href="https://github.com/Thushar410/c-visualizer" target="_blank" class="btn btn-secondary" title="GitHub Repository">
-        <i data-lucide="github"></i> GitHub
-      </a>
-    </div>
   </header>
 
-  <!-- Main Independent Split Layout -->
-  <main class="main-layout">
+  <!-- Mobile Segmented View Switcher (Visible ONLY on Smartphones/Tablets <= 768px) -->
+  <nav class="mobile-nav-bar" id="mobileNavBar">
+    <button class="mobile-nav-btn active" data-view="code"><i data-lucide="file-code"></i> Code</button>
+    <button class="mobile-nav-btn" data-view="all-lines"><i data-lucide="list"></i> All Lines</button>
+    <button class="mobile-nav-btn" data-view="roles"><i data-lucide="cpu"></i> Loops/Funcs</button>
+    <button class="mobile-nav-btn" data-view="dos"><i data-lucide="terminal"></i> DOS Output</button>
+  </nav>
+
+  <!-- Main Layout -->
+  <main class="main-layout" id="mainLayout">
     <!-- Left Column: Source Code & On-Click Line Inspector -->
-    <section class="panel panel-code">
+    <section class="panel panel-code" id="panelCode">
       <div class="panel-header">
         <span class="panel-title"><i data-lucide="file-code"></i> Turbo C Source Code</span>
-        <span class="panel-hint">💡 Click ANY line to inspect its full explanation</span>
+        <span class="panel-hint">💡 Tap any line to inspect</span>
       </div>
 
       <!-- Code Viewer with line numbers -->
-      <div class="code-container">
+      <div class="code-container" id="codeContainer">
         <div id="codeLines" class="code-lines"></div>
       </div>
 
@@ -92,7 +102,7 @@
           <input type="range" id="stepSlider" min="0" max="0" value="0" class="slider">
         </div>
 
-        <div class="speed-control">
+        <div class="speed-control desktop-only">
           <span>Speed:</span>
           <select id="speedSelect" class="select-sm">
             <option value="1500">Normal</option>
@@ -102,11 +112,11 @@
         </div>
       </div>
 
-      <!-- Dedicated Active Line Inspector Box (Opens on click) -->
+      <!-- Dedicated Active Line Inspector Box (Opens on tap/click) -->
       <div class="inspector-box" id="inspectorBox">
         <div id="inspectorPlaceholder" class="inspector-placeholder">
           <i data-lucide="mouse-pointer-click"></i>
-          <span><strong>Click any line of code above</strong> to see what it does, how Turbo C executes it, and exam viva questions!</span>
+          <span><strong>Tap any line of code above</strong> to reveal its explanation, Turbo C behavior, and viva points!</span>
         </div>
 
         <div id="inspectorDetails" class="hidden">
@@ -124,12 +134,12 @@
             </div>
 
             <div class="inspector-field">
-              <span class="field-label"><i data-lucide="cpu" class="icon-purple"></i> Turbo C &amp; Hardware Background Action:</span>
+              <span class="field-label"><i data-lucide="cpu" class="icon-purple"></i> Turbo C &amp; Hardware Action:</span>
               <p id="inspectorUnderTheHood" class="field-value">Preprocessor parses header declarations before compiling.</p>
             </div>
 
             <div class="inspector-field">
-              <span class="field-label"><i data-lucide="award" class="icon-gold"></i> Examiner Viva Question on this line:</span>
+              <span class="field-label"><i data-lucide="award" class="icon-gold"></i> Examiner Viva Question:</span>
               <p id="inspectorVivaTip" class="field-value">What does stdio stand for? Standard Input Output.</p>
             </div>
           </div>
@@ -137,9 +147,10 @@
       </div>
     </section>
 
-    <!-- Right Column: 3 Study Tabs (Independent Scroll Area) -->
-    <section class="panel panel-visualizer">
-      <div class="panel-tabs">
+    <!-- Right Column: 3 Study Tabs (Desktop & Mobile viewable) -->
+    <section class="panel panel-visualizer" id="panelVisualizer">
+      <!-- Desktop Tab Bar (Hidden on Mobile, replaced by mobile-nav-bar) -->
+      <div class="panel-tabs desktop-only">
         <button id="tabAllLinesBtn" class="panel-tab active"><i data-lucide="list"></i> Every Line Explained</button>
         <button id="tabRolesBtn" class="panel-tab"><i data-lucide="cpu"></i> Functions &amp; Loops</button>
         <button id="tabMemoryBtn" class="panel-tab"><i data-lucide="layers"></i> RAM &amp; DOS Screen</button>
@@ -149,18 +160,16 @@
       <div id="tabAllLinesContent" class="tab-content active-content">
         <div class="turboc-banner">
           <i data-lucide="help-circle" class="icon-accent"></i>
-          <span>Click on any card below (or click a line in the code on the left) to view its deep explanation!</span>
+          <span>Tap on any card below to see its deep explanation!</span>
         </div>
-        <div id="allLinesCardsContainer" class="all-lines-list">
-          <!-- Dynamically populated with a card for every single line of code! -->
-        </div>
+        <div id="allLinesCardsContainer" class="all-lines-list"></div>
       </div>
 
       <!-- TAB 2: Roles of Functions & Loops -->
       <div id="tabRolesContent" class="tab-content hidden">
         <div class="turboc-banner">
           <i data-lucide="monitor" class="icon-accent"></i>
-          <span><strong>Turbo C / Turbo C7 Tip:</strong> Uses <code>clrscr()</code> from <code>&lt;conio.h&gt;</code> to clear the screen and <code>getch()</code> at the end to hold the MS-DOS output window.</span>
+          <span><strong>Turbo C Tip:</strong> Uses <code>clrscr()</code> from <code>&lt;conio.h&gt;</code> to clear screen and <code>getch()</code> to freeze DOS output.</span>
         </div>
 
         <div class="roles-section">
@@ -180,7 +189,7 @@
           <div class="memory-grid">
             <div class="memory-card stack-card">
               <div class="memory-card-header">
-                <span><i data-lucide="database"></i> Stack Memory (Variables in RAM)</span>
+                <span><i data-lucide="database"></i> Stack Memory (RAM Variables)</span>
                 <span class="address-range">Local Scope</span>
               </div>
               <div id="stackContainer" class="memory-slots-container"></div>

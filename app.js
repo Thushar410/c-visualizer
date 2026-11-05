@@ -1,6 +1,6 @@
 /**
  * C-Viz Main Application Controller — Complete Line-by-Line Turbo C Lab Edition
- * Fixed: Independent VR-like Pane Scrolling & Click-to-Reveal Explanation
+ * Optimized for Desktop & Smartphones (Touch & Small Screen Responsive)
  */
 
 // State
@@ -23,6 +23,7 @@ const stepSlider = document.getElementById("stepSlider");
 const speedSelect = document.getElementById("speedSelect");
 
 // Inspector Elements
+const inspectorBox = document.getElementById("inspectorBox");
 const inspectorPlaceholder = document.getElementById("inspectorPlaceholder");
 const inspectorDetails = document.getElementById("inspectorDetails");
 const inspectorLineBadge = document.getElementById("inspectorLineBadge");
@@ -46,7 +47,9 @@ const closeModalBtn = document.getElementById("closeModalBtn");
 const modalProgramTitle = document.getElementById("modalProgramTitle");
 const vivaQuestionsList = document.getElementById("vivaQuestionsList");
 
-// Tabs
+// Tabs & Mobile Nav
+const mainLayout = document.getElementById("mainLayout");
+const mobileNavBtns = document.querySelectorAll(".mobile-nav-btn");
 const tabAllLinesBtn = document.getElementById("tabAllLinesBtn");
 const tabRolesBtn = document.getElementById("tabRolesBtn");
 const tabMemoryBtn = document.getElementById("tabMemoryBtn");
@@ -58,8 +61,12 @@ const tabMemoryContent = document.getElementById("tabMemoryContent");
  * Initialize
  */
 function init() {
+  if (mainLayout) {
+    mainLayout.classList.add("mobile-view-code");
+  }
   loadProgram(currentProgramKey);
   setupEventListeners();
+  setupMobileNav();
 }
 
 /**
@@ -90,7 +97,6 @@ function loadProgram(key) {
   stepSlider.value = 0;
   stepCounter.textContent = `Line 1 / ${currentCodeLines.length}`;
 
-  // Initial update of memory without auto-scrolling
   updateMemorySimulation(0);
 }
 
@@ -117,11 +123,11 @@ function renderCodeLines(lines) {
     lineDiv.appendChild(numSpan);
     lineDiv.appendChild(contentSpan);
 
-    // CLICK HANDLER: Reveal explanation only when clicked!
+    // CLICK / TAP HANDLER: Reveal explanation only when tapped
     lineDiv.addEventListener("click", () => {
       pauseAnimation();
       hasUserClickedLine = true;
-      inspectLine(idx, true); // true = scroll code if out of view
+      inspectLine(idx, true);
     });
 
     codeLinesContainer.appendChild(lineDiv);
@@ -165,11 +171,10 @@ function renderAllLinesCards(lines) {
       <div class="line-card-viva"><strong>🎓 Viva Point:</strong> ${info.vivaTip}</div>
     `;
 
-    // Click card: highlights line without aggressively scrolling left pane
     card.addEventListener("click", () => {
       pauseAnimation();
       hasUserClickedLine = true;
-      inspectLine(idx, false); // false = DO NOT force scroll left code!
+      inspectLine(idx, false);
     });
 
     allLinesCardsContainer.appendChild(card);
@@ -178,8 +183,6 @@ function renderAllLinesCards(lines) {
 
 /**
  * Inspect a Specific Line (Updates Inspector Box & Highlights)
- * @param {number} index - Line index
- * @param {boolean} shouldScrollCode - Whether to scroll the left code editor
  */
 function inspectLine(index, shouldScrollCode = false) {
   if (index < 0) index = 0;
@@ -200,7 +203,6 @@ function inspectLine(index, shouldScrollCode = false) {
   if (activeLineEl) {
     activeLineEl.classList.add("active-line");
 
-    // Only scroll internally inside .code-container if explicitly requested (e.g. Play/Next button)
     if (shouldScrollCode) {
       const container = activeLineEl.closest(".code-container");
       if (container) {
@@ -212,7 +214,7 @@ function inspectLine(index, shouldScrollCode = false) {
     }
   }
 
-  // Highlight matching card in Right Tab 1 (without moving the left side)
+  // Highlight matching card in Right Tab 1
   document.querySelectorAll(".line-card").forEach(c => c.classList.remove("active-card"));
   const activeCardEl = document.getElementById(`line-card-${index}`);
   if (activeCardEl) {
@@ -230,6 +232,11 @@ function inspectLine(index, shouldScrollCode = false) {
     inspectorSimpleText.textContent = info.simple;
     inspectorUnderTheHood.textContent = info.underTheHood;
     inspectorVivaTip.textContent = info.vivaTip;
+
+    // Smooth scroll inspector to view on mobile if needed
+    if (window.innerWidth <= 768 && inspectorBox) {
+      inspectorBox.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
   }
 
   // Update RAM simulation
@@ -383,6 +390,32 @@ function pauseAnimation() {
 }
 
 /**
+ * Mobile Navigation Switcher
+ */
+function setupMobileNav() {
+  mobileNavBtns.forEach(btn => {
+    btn.addEventListener("click", () => {
+      mobileNavBtns.forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+
+      const view = btn.dataset.view; // 'code', 'all-lines', 'roles', 'dos'
+      if (mainLayout) {
+        mainLayout.classList.remove("mobile-view-code", "mobile-view-all-lines", "mobile-view-roles", "mobile-view-dos");
+        mainLayout.classList.add(`mobile-view-${view}`);
+      }
+
+      if (view === "all-lines") {
+        activateTab(tabAllLinesBtn, tabAllLinesContent);
+      } else if (view === "roles") {
+        activateTab(tabRolesBtn, tabRolesContent);
+      } else if (view === "dos") {
+        activateTab(tabMemoryBtn, tabMemoryContent);
+      }
+    });
+  });
+}
+
+/**
  * Setup Event Listeners
  */
 function setupEventListeners() {
@@ -434,7 +467,7 @@ function setupEventListeners() {
     terminalOutput.innerHTML = `<span class="terminal-prompt">C:\\TURBOC3\\BIN\\TC.EXE</span>`;
   });
 
-  // 3-Tab Navigation
+  // 3-Tab Navigation (Desktop)
   tabAllLinesBtn.addEventListener("click", () => {
     activateTab(tabAllLinesBtn, tabAllLinesContent);
   });
@@ -454,7 +487,7 @@ function setupEventListeners() {
     if (e.target === vivaModal) vivaModal.classList.add("hidden");
   });
 
-  // Arrow Keys
+  // Keyboard navigation
   window.addEventListener("keydown", (e) => {
     if (e.key === "ArrowRight") {
       stepNextBtn.click();
