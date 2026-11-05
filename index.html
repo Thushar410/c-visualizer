@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>C-Viz — Full C Lab & Memory Animation Visualizer</title>
+  <title>C-Viz — Shree Devi College C Lab Exam Visualizer (Turbo C / C7)</title>
   <link rel="stylesheet" href="style.css">
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
@@ -14,50 +14,43 @@
     <div class="logo-area">
       <div class="logo-icon">C</div>
       <div>
-        <h1 class="logo-title">C-Viz <span class="badge">Lab Exam Pro</span></h1>
-        <p class="logo-sub">Interactive Background Memory & Code Execution Animator</p>
+        <h1 class="logo-title">C-Viz <span class="badge">Turbo C Lab Exam Pro</span></h1>
+        <p class="logo-sub">Shree Devi College of Information Science — Complete Lab Manual (All 16 Programs)</p>
       </div>
     </div>
 
     <!-- Exam Program Selector -->
     <div class="preset-selector-wrap">
-      <label for="presetSelect"><i data-lucide="book-open"></i> Lab Program:</label>
-      <select id="presetSelect" class="select-input">
-        <optgroup label="📍 Pointers & Memory Layout">
-          <option value="pointers_basic">1. Pointers & Memory Addresses (* and &)</option>
-          <option value="pointer_arithmetic">2. Pointer Arithmetic & 1D Arrays</option>
-          <option value="matrix_2d">3. 2D Arrays & Matrix (Row-Major Order)</option>
+      <label for="programSelect"><i data-lucide="book-open"></i> Lab Program:</label>
+      <select id="programSelect" class="select-input">
+        <optgroup label="📘 PART A (Programs 1 - 8)">
+          <option value="partA_prog1">Part A - 1: Quadratic Equation Roots (else-if ladder)</option>
+          <option value="partA_prog2">Part A - 2: Arithmetic Calculator (switch-case)</option>
+          <option value="partA_prog3">Part A - 3: Reverse Number, Digit Sum & Palindrome</option>
+          <option value="partA_prog4">Part A - 4: First 'n' Fibonacci Numbers</option>
+          <option value="partA_prog5">Part A - 5: Prime Number Check (for loop & break)</option>
+          <option value="partA_prog6">Part A - 6: Character Frequency in String (freq array)</option>
+          <option value="partA_prog7">Part A - 7: Toggle Case (tolower, toupper)</option>
+          <option value="partA_prog8">Part A - 8: Linear Search (Count & Positions)</option>
         </optgroup>
-        <optgroup label="⚙️ Functions & Scope">
-          <option value="pass_by_reference">4. Swap: Pass by Value vs Reference</option>
-          <option value="recursion_fib">11. Recursion Call Stack (Fibonacci Tree)</option>
-        </optgroup>
-        <optgroup label="🔄 Algorithms & Sorting (Lab Core)">
-          <option value="bubble_sort">5. Bubble Sort Algorithm & Swapping</option>
-          <option value="binary_search">6. Binary Search (low, mid, high)</option>
-        </optgroup>
-        <optgroup label="🔤 Strings & Palindrome">
-          <option value="string_reverse">7. Strings & Palindrome (Two-Pointer Method)</option>
-        </optgroup>
-        <optgroup label="🏗️ Structures & Linked Lists">
-          <option value="struct_pointers">8. Structures & Arrow Operator (->)</option>
-          <option value="linked_list_node">9. Singly Linked List Node & Pointers</option>
-        </optgroup>
-        <optgroup label="💾 Dynamic Memory & Bits">
-          <option value="dynamic_malloc">10. Dynamic Memory (malloc & free)</option>
-          <option value="bitwise_ops">12. Bitwise Operators (AND, OR, Shift)</option>
-        </optgroup>
-        <optgroup label="⚡ Custom Sandbox">
-          <option value="custom">⚡ Type & Run Your Custom C Code</option>
+        <optgroup label="📙 PART B (Programs 1 - 8)">
+          <option value="partB_prog1">Part B - 1: Largest & Smallest Element in Array</option>
+          <option value="partB_prog2">Part B - 2: Bubble Sort in Ascending Order</option>
+          <option value="partB_prog3">Part B - 3: Matrix Addition & Multiplication</option>
+          <option value="partB_prog4">Part B - 4: nCr & nPr using Factorial Function</option>
+          <option value="partB_prog5">Part B - 5: Count Vowels, Digits, Spaces (Function)</option>
+          <option value="partB_prog6">Part B - 6: Sort Strings using Pointers</option>
+          <option value="partB_prog7">Part B - 7: Student Structure & Grade Calculation</option>
+          <option value="partB_prog8">Part B - 8: File Operations (Create, Append, Display)</option>
         </optgroup>
       </select>
     </div>
 
     <div class="header-actions">
-      <button id="examTipsBtn" class="btn btn-outline" title="University Lab Exam & Viva Questions">
-        <i data-lucide="graduation-cap"></i> Lab Viva Guide
+      <button id="vivaModalBtn" class="btn btn-outline" title="Exam & Viva Questions for this Program">
+        <i data-lucide="award"></i> Viva Answers
       </button>
-      <button id="resetBtn" class="btn btn-secondary" title="Reset Current Program">
+      <button id="resetBtn" class="btn btn-secondary" title="Reset Simulation">
         <i data-lucide="rotate-ccw"></i> Reset
       </button>
       <a href="https://github.com/Thushar410/c-visualizer" target="_blank" class="btn btn-secondary" title="GitHub Repository">
@@ -66,37 +59,30 @@
     </div>
   </header>
 
-  <!-- Main Layout -->
+  <!-- Main 3-Column / 2-Panel Layout -->
   <main class="main-layout">
-    <!-- Left: Code & Controls -->
+    <!-- Left Column: Source Code & Animation Playback -->
     <section class="panel panel-code">
       <div class="panel-header">
-        <span class="panel-title"><i data-lucide="code-2"></i> C Source Code (Interactive)</span>
-        <span class="panel-hint">💡 Hover/Click tokens (<code>*p</code>, <code>&a</code>, <code>-></code>) to inspect</span>
+        <span class="panel-title"><i data-lucide="file-code"></i> Turbo C Source Code</span>
+        <span class="panel-hint">💡 Click any line or step button to see execution</span>
       </div>
 
-      <!-- Editor / Code Container -->
+      <!-- Code Viewer with line numbers -->
       <div class="code-container">
-        <div id="codeLines" class="code-lines">
-          <!-- Dynamically generated with line numbers and token highlights -->
-        </div>
-        <textarea id="customCodeEditor" class="custom-editor hidden" spellcheck="false" placeholder="// Type simple C code here...
-int a = 10;
-int *p = &a;
-*p = 50;
-printf(&quot;a = %d\n&quot;, a);"></textarea>
+        <div id="codeLines" class="code-lines"></div>
       </div>
 
-      <!-- Playback Controls Bar -->
+      <!-- Playback Controls -->
       <div class="controls-bar">
         <div class="playback-controls">
-          <button id="stepPrevBtn" class="btn btn-icon" title="Step Back (Left Arrow)">
+          <button id="stepPrevBtn" class="btn btn-icon" title="Previous Step (Left Arrow)">
             <i data-lucide="skip-back"></i>
           </button>
           <button id="playPauseBtn" class="btn btn-primary" title="Play / Pause Animation">
             <i data-lucide="play" id="playIcon"></i> Play
           </button>
-          <button id="stepNextBtn" class="btn btn-icon" title="Step Forward (Right Arrow)">
+          <button id="stepNextBtn" class="btn btn-icon" title="Next Step (Right Arrow)">
             <i data-lucide="skip-forward"></i>
           </button>
         </div>
@@ -116,124 +102,90 @@ printf(&quot;a = %d\n&quot;, a);"></textarea>
         </div>
       </div>
 
-      <!-- Background Execution Explanation -->
+      <!-- Line-by-Line Execution Explanation Box -->
       <div class="explanation-box" id="explanationBox">
         <div class="explanation-header">
-          <i data-lucide="cpu" class="icon-accent"></i>
-          <span class="explanation-title">How It Executes Under The Hood:</span>
+          <i data-lucide="sparkles" class="icon-accent"></i>
+          <span class="explanation-title">What is happening right now:</span>
         </div>
-        <p id="explanationText" class="explanation-text">Select a program and press Play or Step Forward to watch background memory execution.</p>
-        <div id="vivaTipBox" class="viva-tip-box">
-          <i data-lucide="award" class="icon-gold"></i>
-          <span id="vivaTipText"><strong>Lab Viva Note:</strong> Understanding how RAM allocates bytes for variables is essential for the exam.</span>
-        </div>
+        <p id="explanationText" class="explanation-text">Press Play or Step Forward to start the visualization.</p>
       </div>
     </section>
 
-    <!-- Right: Visual RAM Memory Stage -->
+    <!-- Right Column: Functions & Loops Detailed Breakdown + RAM & Terminal -->
     <section class="panel panel-visualizer">
-      <div class="panel-header">
-        <span class="panel-title"><i data-lucide="layers"></i> Physical RAM Memory Stage</span>
-        <div class="legend">
-          <span class="legend-item"><span class="color-dot dot-stack"></span> Stack Frame</span>
-          <span class="legend-item"><span class="color-dot dot-heap"></span> Heap (malloc)</span>
-          <span class="legend-item"><span class="color-dot dot-pointer"></span> Pointer Arrow</span>
+      <!-- Tabs to switch between: 1. Function & Loop Roles, 2. RAM Memory & Terminal -->
+      <div class="panel-tabs">
+        <button id="tabRolesBtn" class="panel-tab active"><i data-lucide="cpu"></i> Role of Functions & Loops</button>
+        <button id="tabMemoryBtn" class="panel-tab"><i data-lucide="layers"></i> RAM Memory & Output</button>
+      </div>
+
+      <!-- TAB 1: Roles of Functions & Loops (THE CORE REQUIREMENT) -->
+      <div id="tabRolesContent" class="tab-content active-content">
+        <!-- Turbo C Info Banner -->
+        <div class="turboc-banner">
+          <i data-lucide="monitor" class="icon-accent"></i>
+          <span><strong>Turbo C / Turbo C7 Tip:</strong> Uses <code>clrscr()</code> from <code>&lt;conio.h&gt;</code> to clear the screen and <code>getch()</code> at the end to hold the MS-DOS output window.</span>
+        </div>
+
+        <!-- Role of Functions Section -->
+        <div class="roles-section">
+          <h3 class="section-heading"><i data-lucide="box"></i> 1. Role of Functions in this Program</h3>
+          <div id="functionsContainer" class="roles-cards-grid">
+            <!-- Dynamically populated with function cards -->
+          </div>
+        </div>
+
+        <!-- Role of Loops & Branching Section -->
+        <div class="roles-section">
+          <h3 class="section-heading"><i data-lucide="repeat"></i> 2. Role of Every Loop & Condition in this Program</h3>
+          <div id="loopsContainer" class="roles-cards-grid">
+            <!-- Dynamically populated with loop cards -->
+          </div>
         </div>
       </div>
 
-      <div class="visualizer-content" id="visualizerCanvas">
-        <!-- SVG overlay for dynamic pointer connector arrows -->
-        <svg id="pointerSvg" class="pointer-svg"></svg>
-
-        <!-- Memory Cards -->
-        <div class="memory-grid">
-          <!-- Stack Memory Frame -->
-          <div class="memory-card stack-card">
-            <div class="memory-card-header">
-              <span><i data-lucide="database"></i> Stack Frame (Local Variables & Addresses)</span>
-              <span class="address-range">High Address ↓ Low Address</span>
-            </div>
-            <div id="stackContainer" class="memory-slots-container">
-              <!-- Memory blocks injected dynamically -->
+      <!-- TAB 2: RAM Memory & Terminal Output -->
+      <div id="tabMemoryContent" class="tab-content hidden">
+        <div class="visualizer-content" id="visualizerCanvas">
+          <!-- Memory Cards -->
+          <div class="memory-grid">
+            <div class="memory-card stack-card">
+              <div class="memory-card-header">
+                <span><i data-lucide="database"></i> Stack Memory (Variables in RAM)</span>
+                <span class="address-range">Local Scope</span>
+              </div>
+              <div id="stackContainer" class="memory-slots-container"></div>
             </div>
           </div>
 
-          <!-- Heap Memory Frame (Dynamic malloc) -->
-          <div class="memory-card heap-card" id="heapCard">
-            <div class="memory-card-header">
-              <span><i data-lucide="box"></i> Heap Memory (Dynamic `malloc` / `calloc`)</span>
-              <span class="address-range">Low Address ↑ High Address</span>
+          <!-- Terminal Output Console (Simulates Turbo C Output Screen) -->
+          <div class="terminal-panel">
+            <div class="terminal-header">
+              <span><i data-lucide="terminal"></i> Turbo C Output Window (DOS Screen)</span>
+              <button id="clearConsoleBtn" class="btn-text">Clear</button>
             </div>
-            <div id="heapContainer" class="memory-slots-container">
-              <!-- Heap blocks injected dynamically -->
+            <div id="terminalOutput" class="terminal-body">
+              <span class="terminal-prompt">C:\TURBOC3\BIN\TC.EXE</span>
             </div>
-          </div>
-        </div>
-
-        <!-- Terminal Output Console -->
-        <div class="terminal-panel">
-          <div class="terminal-header">
-            <span><i data-lucide="terminal"></i> Terminal Output (printf / stdout)</span>
-            <button id="clearConsoleBtn" class="btn-text">Clear</button>
-          </div>
-          <div id="terminalOutput" class="terminal-body">
-            <span class="terminal-prompt">$ gcc program.c -o program &amp;&amp; ./program</span>
           </div>
         </div>
       </div>
     </section>
   </main>
 
-  <!-- Comprehensive Lab Viva Modal -->
+  <!-- Viva & Exam Modal -->
   <div id="vivaModal" class="modal-backdrop hidden">
     <div class="modal-card">
       <div class="modal-header">
-        <h2><i data-lucide="graduation-cap"></i> University C Lab Exam — Essential Viva Questions</h2>
+        <h2 id="modalProgramTitle"><i data-lucide="graduation-cap"></i> Examiner Viva Questions</h2>
         <button id="closeModalBtn" class="btn-icon"><i data-lucide="x"></i></button>
       </div>
-      <div class="modal-body">
-        <div class="viva-item">
-          <h4>1. What is the difference between Call by Value and Call by Reference?</h4>
-          <p><strong>Call by Value:</strong> Function receives a <em>copy</em> of the argument. Changes made inside the function do NOT affect original variables.<br>
-          <strong>Call by Reference:</strong> Function receives the <em>memory address</em> (pointer) of variables. Dereferencing allows direct mutation of original variables in the caller's stack frame.</p>
-        </div>
-        <div class="viva-item">
-          <h4>2. What does <code>ptr + 1</code> actually do? (Pointer Arithmetic)</h4>
-          <p>It adds <code>1 * sizeof(*ptr)</code> bytes, <strong>NOT 1 byte</strong>! For an <code>int*</code> (4 bytes), <code>ptr + 1</code> adds 4 bytes. For a <code>double*</code>, it adds 8 bytes.</p>
-        </div>
-        <div class="viva-item">
-          <h4>3. How are 2D Arrays stored in C memory?</h4>
-          <p>C stores 2D arrays in <strong>Row-Major Order</strong> (Row 0 is placed in memory, immediately followed by Row 1). Physical memory is flat and 1D; the element <code>mat[i][j]</code> is accessed at address <code>Base + (i * COLS + j) * sizeof(element)</code>.</p>
-        </div>
-        <div class="viva-item">
-          <h4>4. What is a Dangling Pointer vs NULL Pointer vs Wild Pointer?</h4>
-          <p><strong>NULL Pointer:</strong> Explicitly points to address 0 (safe to check <code>ptr == NULL</code>).<br>
-          <strong>Dangling Pointer:</strong> Points to memory that was already freed with <code>free()</code>.<br>
-          <strong>Wild Pointer:</strong> An uninitialized pointer holding random garbage address.</p>
-        </div>
-        <div class="viva-item">
-          <h4>5. What is the difference between <code>malloc()</code> and <code>calloc()</code>?</h4>
-          <p><strong><code>malloc(size)</code>:</strong> Allocates raw bytes on Heap with <em>uninitialized garbage values</em>.<br>
-          <strong><code>calloc(n, size)</code>:</strong> Allocates memory and automatically <em>initializes all bits to zero (0)</em>.</p>
-        </div>
-        <div class="viva-item">
-          <h4>6. What is the Arrow Operator (<code>-></code>) in C?</h4>
-          <p>The arrow operator <code>ptr->member</code> is shorthand for <code>(*ptr).member</code>. It is used when accessing fields of a structure through a pointer.</p>
-        </div>
-        <div class="viva-item">
-          <h4>7. Why is the Null Terminator <code>'\0'</code> necessary in strings?</h4>
-          <p>In C, character arrays do not store string length. Functions like <code>printf("%s")</code> and <code>strlen()</code> rely on reading sequential bytes until encountering the byte <code>'\0'</code> (ASCII 0) to know where the string ends.</p>
-        </div>
-        <div class="viva-item">
-          <h4>8. What causes a Stack Overflow in recursion?</h4>
-          <p>Every recursive call allocates a stack frame. If the base case is missing or incorrect, recursive calls continue endlessly until the limited Stack memory space is exhausted, resulting in a segmentation fault.</p>
-        </div>
+      <div class="modal-body" id="vivaQuestionsList">
+        <!-- Dynamically injected viva Q&A -->
       </div>
     </div>
   </div>
-
-  <!-- Interactive Token Tooltip -->
-  <div id="tokenTooltip" class="token-tooltip hidden"></div>
 
   <!-- Scripts -->
   <script src="c_engine.js"></script>

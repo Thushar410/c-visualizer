@@ -1,18 +1,17 @@
 /**
- * C-Viz Main Application Controller
+ * C-Viz Main Application Controller — Shree Devi College Turbo C Lab Manual Edition
  */
 
-// State Management
-let currentPresetKey = "pointers_basic";
+// State
+let currentProgramKey = "partA_prog1";
 let currentStepIndex = 0;
 let isPlaying = false;
 let playInterval = null;
 let playSpeed = 1500;
 
 // DOM Elements
-const presetSelect = document.getElementById("presetSelect");
+const programSelect = document.getElementById("programSelect");
 const codeLinesContainer = document.getElementById("codeLines");
-const customCodeEditor = document.getElementById("customCodeEditor");
 const stepPrevBtn = document.getElementById("stepPrevBtn");
 const playPauseBtn = document.getElementById("playPauseBtn");
 const stepNextBtn = document.getElementById("stepNextBtn");
@@ -20,63 +19,56 @@ const stepCounter = document.getElementById("stepCounter");
 const stepSlider = document.getElementById("stepSlider");
 const speedSelect = document.getElementById("speedSelect");
 const explanationText = document.getElementById("explanationText");
-const vivaTipText = document.getElementById("vivaTipText");
+const functionsContainer = document.getElementById("functionsContainer");
+const loopsContainer = document.getElementById("loopsContainer");
 const stackContainer = document.getElementById("stackContainer");
-const heapCard = document.getElementById("heapCard");
-const heapContainer = document.getElementById("heapContainer");
-const pointerSvg = document.getElementById("pointerSvg");
 const terminalOutput = document.getElementById("terminalOutput");
 const clearConsoleBtn = document.getElementById("clearConsoleBtn");
 const resetBtn = document.getElementById("resetBtn");
-const examTipsBtn = document.getElementById("examTipsBtn");
+const vivaModalBtn = document.getElementById("vivaModalBtn");
 const vivaModal = document.getElementById("vivaModal");
 const closeModalBtn = document.getElementById("closeModalBtn");
-const tokenTooltip = document.getElementById("tokenTooltip");
+const modalProgramTitle = document.getElementById("modalProgramTitle");
+const vivaQuestionsList = document.getElementById("vivaQuestionsList");
+
+// Tabs
+const tabRolesBtn = document.getElementById("tabRolesBtn");
+const tabMemoryBtn = document.getElementById("tabMemoryBtn");
+const tabRolesContent = document.getElementById("tabRolesContent");
+const tabMemoryContent = document.getElementById("tabMemoryContent");
 
 /**
  * Initialize Application
  */
 function init() {
-  loadPreset(currentPresetKey);
+  loadProgram(currentProgramKey);
   setupEventListeners();
-  window.addEventListener("resize", () => renderPointerArrows());
 }
 
 /**
- * Load a Code Preset
+ * Load a Lab Program
  */
-function loadPreset(key) {
-  currentPresetKey = key;
+function loadProgram(key) {
+  currentProgramKey = key;
   currentStepIndex = 0;
   pauseAnimation();
 
-  if (key === "custom") {
-    codeLinesContainer.classList.add("hidden");
-    customCodeEditor.classList.remove("hidden");
-    customCodeEditor.value = `// Type simple C code here:
-int x = 10;
-int *ptr = &x;
-*ptr = 99;
-printf("x is %d\\n", x);`;
-    parseAndLoadCustomCode();
-    return;
-  }
+  const prog = LAB_PROGRAMS[key];
+  if (!prog) return;
 
-  codeLinesContainer.classList.remove("hidden");
-  customCodeEditor.classList.add("hidden");
+  renderCodeLines(prog.code);
+  renderFunctionRoles(prog.functionRoles || []);
+  renderLoopBreakdowns(prog.loopBreakdown || []);
+  renderVivaModalContent(prog);
 
-  const preset = EXAM_PRESETS[key];
-  if (!preset) return;
-
-  renderCodeLines(preset.code);
-  stepSlider.max = preset.steps.length - 1;
+  stepSlider.max = Math.max(0, prog.steps.length - 1);
   stepSlider.value = 0;
 
   renderCurrentStep();
 }
 
 /**
- * Render Interactive Code Lines with Syntax Highlighting & Token Tooltips
+ * Render Code Lines with Line Numbers
  */
 function renderCodeLines(code) {
   codeLinesContainer.innerHTML = "";
@@ -88,139 +80,137 @@ function renderCodeLines(code) {
     lineDiv.className = "code-line";
     lineDiv.dataset.lineNum = lineNum;
 
-    // Line Number
     const numSpan = document.createElement("span");
     numSpan.className = "line-num";
     numSpan.textContent = lineNum;
 
-    // Line Content with Syntax Highlighting
     const contentSpan = document.createElement("span");
     contentSpan.className = "line-content";
-    contentSpan.innerHTML = highlightSyntax(lineText);
+    contentSpan.innerHTML = formatCodeLine(lineText);
 
     lineDiv.appendChild(numSpan);
     lineDiv.appendChild(contentSpan);
 
-    // Click to Jump to Step
+    // Jump to step on click
     lineDiv.addEventListener("click", () => {
-      const steps = getCurrentSteps();
-      const targetStep = steps.findIndex(s => s.line === lineNum);
-      if (targetStep !== -1) {
-        currentStepIndex = targetStep;
+      const prog = LAB_PROGRAMS[currentProgramKey];
+      if (!prog) return;
+      const stepIdx = prog.steps.findIndex(s => s.line === lineNum);
+      if (stepIdx !== -1) {
+        currentStepIndex = stepIdx;
         renderCurrentStep();
       }
     });
 
     codeLinesContainer.appendChild(lineDiv);
   });
-
-  attachTokenInteractions();
 }
 
-/**
- * Lightweight C Syntax Highlighter
- */
-function highlightSyntax(code) {
-  if (!code.trim()) return "&nbsp;";
-
-  // Handle comments
-  if (code.trim().startsWith("//")) {
-    return `<span class="syn-comment">${escapeHtml(code)}</span>`;
+function formatCodeLine(text) {
+  if (!text.trim()) return "&nbsp;";
+  if (text.trim().startsWith("//")) {
+    return `<span style="color: #8b949e; font-style: italic;">${escapeHtml(text)}</span>`;
   }
-
-  let escaped = escapeHtml(code);
-
-  // Strings
-  escaped = escaped.replace(/(".*?")/g, '<span class="syn-str">$1</span>');
-
-  // Keywords & Types
-  const keywords = ["return", "if", "else", "for", "while", "void", "sizeof"];
-  keywords.forEach(kw => {
-    const regex = new RegExp(`\\b(${kw})\\b`, "g");
-    escaped = escaped.replace(regex, `<span class="syn-keyword syn-interactive" data-token="${kw}">$1</span>`);
-  });
-
-  const types = ["int", "char", "float", "double"];
-  types.forEach(tp => {
-    const regex = new RegExp(`\\b(${tp})\\b`, "g");
-    escaped = escaped.replace(regex, `<span class="syn-type syn-interactive" data-token="${tp}">$1</span>`);
-  });
-
-  // Built-in functions
-  const funcs = ["printf", "malloc", "free"];
-  funcs.forEach(fn => {
-    const regex = new RegExp(`\\b(${fn})\\b`, "g");
-    escaped = escaped.replace(regex, `<span class="syn-func syn-interactive" data-token="${fn}">$1</span>`);
-  });
-
-  // Operators of special interest in C
-  escaped = escaped.replace(/(\*)/g, '<span class="syn-ptr syn-interactive" data-token="*">$1</span>');
-  escaped = escaped.replace(/(&amp;|&)/g, '<span class="syn-addr syn-interactive" data-token="&">&amp;</span>');
-
-  return escaped;
+  return escapeHtml(text);
 }
 
 function escapeHtml(text) {
-  return text
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
+  return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
 /**
- * Attach Hover & Click Info Tooltips to Code Tokens
+ * Render Role of Functions
  */
-function attachTokenInteractions() {
-  const interactiveTokens = document.querySelectorAll(".syn-interactive");
-  interactiveTokens.forEach(el => {
-    el.addEventListener("mouseenter", (e) => {
-      const token = el.dataset.token;
-      const def = TOKEN_DEFINITIONS[token];
-      if (def) {
-        tokenTooltip.innerHTML = `<strong>${token}</strong>: ${def}`;
-        tokenTooltip.classList.remove("hidden");
-        const rect = el.getBoundingClientRect();
-        tokenTooltip.style.top = `${rect.bottom + 8}px`;
-        tokenTooltip.style.left = `${Math.min(rect.left, window.innerWidth - 280)}px`;
-      }
-    });
+function renderFunctionRoles(funcs) {
+  functionsContainer.innerHTML = "";
+  if (funcs.length === 0) {
+    functionsContainer.innerHTML = `<p style="color: var(--text-muted); font-size: 13px;">Standard main() function.</p>`;
+    return;
+  }
 
-    el.addEventListener("mouseleave", () => {
-      tokenTooltip.classList.add("hidden");
-    });
+  funcs.forEach(f => {
+    const card = document.createElement("div");
+    card.className = "role-card";
+    card.innerHTML = `
+      <div class="role-card-header">
+        <span class="role-func-name">${f.name}</span>
+        <span class="role-badge">${f.role}</span>
+      </div>
+      <p class="role-desc">${f.desc}</p>
+    `;
+    functionsContainer.appendChild(card);
   });
 }
 
 /**
- * Get Active Steps
+ * Render Role of Loops & Conditions
  */
-function getCurrentSteps() {
-  if (currentPresetKey === "custom") {
-    return window.customSteps || [];
+function renderLoopBreakdowns(loops) {
+  loopsContainer.innerHTML = "";
+  if (loops.length === 0) {
+    loopsContainer.innerHTML = `<p style="color: var(--text-muted); font-size: 13px;">No loops used in this program.</p>`;
+    return;
   }
-  return EXAM_PRESETS[currentPresetKey]?.steps || [];
+
+  loops.forEach(l => {
+    const card = document.createElement("div");
+    card.className = "loop-card";
+
+    let detailsHtml = "";
+    if (l.details && l.details.length > 0) {
+      detailsHtml = `<ul class="loop-details-list">` + 
+        l.details.map(d => `<li>${d}</li>`).join("") + 
+        `</ul>`;
+    }
+
+    card.innerHTML = `
+      <div class="loop-header-tag">${l.header}</div>
+      <div class="loop-purpose">${l.purpose}</div>
+      ${detailsHtml}
+    `;
+    loopsContainer.appendChild(card);
+  });
 }
 
 /**
- * Render Current Simulation Step
+ * Render Viva Questions in Modal
+ */
+function renderVivaModalContent(prog) {
+  modalProgramTitle.innerHTML = `<i data-lucide="graduation-cap"></i> ${prog.title} — Viva Q&A`;
+  vivaQuestionsList.innerHTML = "";
+
+  (prog.vivaQuestions || []).forEach((item, idx) => {
+    const div = document.createElement("div");
+    div.className = "viva-item";
+    div.innerHTML = `
+      <h4>Q${idx + 1}: ${item.q}</h4>
+      <p><strong>Answer for Examiner:</strong> ${item.a}</p>
+    `;
+    vivaQuestionsList.appendChild(div);
+  });
+  lucide.createIcons();
+}
+
+/**
+ * Render Current Step
  */
 function renderCurrentStep() {
-  const steps = getCurrentSteps();
-  if (steps.length === 0) return;
+  const prog = LAB_PROGRAMS[currentProgramKey];
+  if (!prog || !prog.steps || prog.steps.length === 0) return;
 
-  if (currentStepIndex >= steps.length) {
-    currentStepIndex = steps.length - 1;
+  if (currentStepIndex >= prog.steps.length) {
+    currentStepIndex = prog.steps.length - 1;
     pauseAnimation();
   }
   if (currentStepIndex < 0) currentStepIndex = 0;
 
-  const step = steps[currentStepIndex];
+  const step = prog.steps[currentStepIndex];
 
-  // Update Controls
-  stepCounter.textContent = `Step ${currentStepIndex + 1} / ${steps.length}`;
+  // Update controls
+  stepCounter.textContent = `Step ${currentStepIndex + 1} / ${prog.steps.length}`;
   stepSlider.value = currentStepIndex;
 
-  // Highlight Active Line in Code
+  // Highlight active line
   document.querySelectorAll(".code-line").forEach(l => l.classList.remove("active-line"));
   if (step.line) {
     const activeLineEl = document.querySelector(`.code-line[data-line-num="${step.line}"]`);
@@ -230,179 +220,50 @@ function renderCurrentStep() {
     }
   }
 
-  // Update Explanation & Viva Note
+  // Update explanation
   explanationText.textContent = step.explanation;
-  vivaTipText.innerHTML = step.vivaTip || "Understanding memory layouts is the key to mastering C!";
 
-  // Render Stack Memory
+  // Render RAM
   renderStack(step.stack || []);
 
-  // Render Heap Memory
-  renderHeap(step.heap || []);
-
-  // Render Terminal Output
+  // Render Terminal
   renderTerminal(step.terminal || []);
-
-  // Render Animated Pointer SVG Arrows
-  setTimeout(() => {
-    renderPointerArrows(step.pointers || []);
-  }, 50);
 }
 
-/**
- * Render Stack Slots
- */
 function renderStack(stackData) {
   stackContainer.innerHTML = "";
-
   if (stackData.length === 0) {
-    stackContainer.innerHTML = `<div style="color: #64748b; font-size: 13px; text-align: center; padding: 20px;">
-      Stack empty (Functions popped / unallocated)
-    </div>`;
+    stackContainer.innerHTML = `<div style="color: #64748b; font-size: 13px; text-align: center; padding: 15px;">Stack frame active</div>`;
     return;
   }
 
   stackData.forEach(item => {
-    const slotDiv = document.createElement("div");
-    slotDiv.className = `memory-slot ${item.isUpdated ? "updated" : ""} ${item.pointsTo ? "pointer-slot" : ""}`;
-    slotDiv.id = `slot-${cleanVarName(item.name)}`;
-    slotDiv.dataset.address = item.address;
-
-    slotDiv.innerHTML = `
-      <div class="slot-addr">${item.address}</div>
-      <div class="slot-name-type">
+    const slot = document.createElement("div");
+    slot.className = `memory-slot ${item.isUpdated ? "updated" : ""}`;
+    slot.innerHTML = `
+      <div class="slot-addr">${item.address || "0x1000"}</div>
+      <div>
         <span class="slot-var-name">${item.name}</span>
         <span class="slot-type">${item.type}</span>
       </div>
-      <div class="slot-val-box">
-        <span>${item.value}</span>
-        ${item.pointsTo ? `<span class="pointer-target-indicator">➔ ${item.pointsTo}</span>` : ""}
-      </div>
-      <div class="slot-bytes-badge">${item.bytes} bytes</div>
+      <div class="slot-val-box">${item.value}</div>
     `;
-
-    // Interactive hover: hovering memory slot highlights active line
-    slotDiv.addEventListener("mouseenter", () => {
-      slotDiv.classList.add("highlighted");
-    });
-    slotDiv.addEventListener("mouseleave", () => {
-      slotDiv.classList.remove("highlighted");
-    });
-
-    stackContainer.appendChild(slotDiv);
+    stackContainer.appendChild(slot);
   });
 }
 
-/**
- * Render Heap Slots
- */
-function renderHeap(heapData) {
-  heapContainer.innerHTML = "";
-
-  if (!heapData || heapData.length === 0) {
-    heapCard.classList.add("hidden");
-    return;
-  }
-
-  heapCard.classList.remove("hidden");
-
-  heapData.forEach(item => {
-    const slotDiv = document.createElement("div");
-    slotDiv.className = `memory-slot ${item.isUpdated ? "updated" : ""} ${item.isFreed ? "freed-slot" : ""}`;
-    slotDiv.id = `slot-${cleanVarName(item.name)}`;
-    slotDiv.dataset.address = item.address;
-
-    slotDiv.innerHTML = `
-      <div class="slot-addr" style="color: var(--accent-amber);">${item.address}</div>
-      <div class="slot-name-type">
-        <span class="slot-var-name" style="color: var(--accent-amber);">${item.name}</span>
-        <span class="slot-type">Heap Chunk</span>
-      </div>
-      <div class="slot-val-box">
-        <span style="${item.isFreed ? 'color: #f87171;' : ''}">${item.value}</span>
-      </div>
-      <div class="slot-bytes-badge">${item.bytes} bytes</div>
-    `;
-
-    heapContainer.appendChild(slotDiv);
-  });
-}
-
-/**
- * Render Terminal Console
- */
-function renderTerminal(terminalLines) {
-  terminalOutput.innerHTML = `<span class="terminal-prompt">$ ./program</span>`;
-  terminalLines.forEach(line => {
+function renderTerminal(lines) {
+  terminalOutput.innerHTML = `<span class="terminal-prompt">C:\\TURBOC3\\BIN\\TC.EXE</span>`;
+  lines.forEach(l => {
     const lineEl = document.createElement("div");
     lineEl.className = "terminal-line";
-    lineEl.textContent = line;
+    lineEl.textContent = l;
     terminalOutput.appendChild(lineEl);
   });
 }
 
 /**
- * Render SVG Pointer Connecting Arrows
- */
-function renderPointerArrows(pointers) {
-  pointerSvg.innerHTML = "";
-  if (!pointers || pointers.length === 0) return;
-
-  const svgRect = pointerSvg.getBoundingClientRect();
-
-  pointers.forEach(ptr => {
-    const fromEl = document.getElementById(`slot-${cleanVarName(ptr.from)}`);
-    const toEl = document.querySelector(`.memory-slot[data-address="${ptr.toAddr}"]`);
-
-    if (fromEl && toEl) {
-      const fromRect = fromEl.getBoundingClientRect();
-      const toRect = toEl.getBoundingClientRect();
-
-      const startX = fromRect.right - svgRect.left - 15;
-      const startY = fromRect.top + fromRect.height / 2 - svgRect.top;
-
-      const endX = toRect.left - svgRect.left + 5;
-      const endY = toRect.top + toRect.height / 2 - svgRect.top;
-
-      // Draw curved bezier path
-      const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-      const curvature = 40;
-      const d = `M ${startX} ${startY} C ${startX + curvature} ${startY}, ${endX - curvature} ${endY}, ${endX} ${endY}`;
-
-      path.setAttribute("d", d);
-      path.setAttribute("fill", "none");
-      path.setAttribute("stroke", "#ec4899");
-      path.setAttribute("stroke-width", "2.5");
-      path.setAttribute("stroke-dasharray", "4");
-      path.setAttribute("marker-end", "url(#arrowhead)");
-
-      // Arrowhead marker definition
-      let defs = pointerSvg.querySelector("defs");
-      if (!defs) {
-        defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
-        const marker = document.createElementNS("http://www.w3.org/2000/svg", "marker");
-        marker.setAttribute("id", "arrowhead");
-        marker.setAttribute("markerWidth", "8");
-        marker.setAttribute("markerHeight", "8");
-        marker.setAttribute("refX", "6");
-        marker.setAttribute("refY", "3");
-        marker.setAttribute("orient", "auto");
-        marker.innerHTML = `<path d="M0,0 L0,6 L6,3 z" fill="#ec4899" />`;
-        defs.appendChild(marker);
-        pointerSvg.appendChild(defs);
-      }
-
-      pointerSvg.appendChild(path);
-    }
-  });
-}
-
-function cleanVarName(name) {
-  return name.replace(/[^a-zA-Z0-9_]/g, "_");
-}
-
-/**
- * Play / Pause Animation Loop
+ * Play / Pause
  */
 function togglePlayPause() {
   if (isPlaying) {
@@ -413,8 +274,8 @@ function togglePlayPause() {
 }
 
 function startAnimation() {
-  const steps = getCurrentSteps();
-  if (currentStepIndex >= steps.length - 1) {
+  const prog = LAB_PROGRAMS[currentProgramKey];
+  if (currentStepIndex >= prog.steps.length - 1) {
     currentStepIndex = 0;
   }
   isPlaying = true;
@@ -422,8 +283,8 @@ function startAnimation() {
   lucide.createIcons();
 
   playInterval = setInterval(() => {
-    const steps = getCurrentSteps();
-    if (currentStepIndex < steps.length - 1) {
+    const p = LAB_PROGRAMS[currentProgramKey];
+    if (currentStepIndex < p.steps.length - 1) {
       currentStepIndex++;
       renderCurrentStep();
     } else {
@@ -441,120 +302,17 @@ function pauseAnimation() {
 }
 
 /**
- * Custom Code Parser (Evaluates simple C snippets for instant experimentation)
- */
-function parseAndLoadCustomCode() {
-  const code = customCodeEditor.value;
-  const lines = code.split("\n");
-  const steps = [];
-
-  const memory = {};
-  const terminal = [];
-  let nextAddr = 0x1000;
-
-  lines.forEach((lineText, idx) => {
-    const trimmed = lineText.trim();
-    if (!trimmed || trimmed.startsWith("//")) return;
-
-    // Pattern: int x = 10;
-    const intDecl = trimmed.match(/^int\s+([a-zA-Z_]\w*)\s*=\s*(-?\d+);/);
-    if (intDecl) {
-      const varName = intDecl[1];
-      const val = intDecl[2];
-      const addr = "0x" + nextAddr.toString(16).toUpperCase();
-      nextAddr += 4;
-      memory[varName] = { name: varName, type: "int", address: addr, value: val, bytes: 4 };
-
-      steps.push({
-        line: idx + 1,
-        explanation: `Allocates 4 bytes for integer '${varName}' at address ${addr} with initial value ${val}.`,
-        vivaTip: `<strong>Variable Declaration:</strong> Allocates 4 bytes on stack frame.`,
-        stack: Object.values(memory).map(m => ({ ...m, isUpdated: m.name === varName })),
-        terminal: [...terminal]
-      });
-      return;
-    }
-
-    // Pattern: int *ptr = &x;
-    const ptrDecl = trimmed.match(/^int\s*\*\s*([a-zA-Z_]\w*)\s*=\s*&([a-zA-Z_]\w*);/);
-    if (ptrDecl) {
-      const ptrName = ptrDecl[1];
-      const targetName = ptrDecl[2];
-      const target = memory[targetName];
-      const addr = "0x" + nextAddr.toString(16).toUpperCase();
-      nextAddr += 8;
-
-      if (target) {
-        memory[ptrName] = { name: ptrName, type: "int*", address: addr, value: target.address, bytes: 8, pointsTo: target.address };
-        steps.push({
-          line: idx + 1,
-          explanation: `Pointer '${ptrName}' initialized with address of '${targetName}' (${target.address}).`,
-          vivaTip: `<strong>Pointer Link:</strong> '${ptrName}' holds the memory address of '${targetName}'.`,
-          stack: Object.values(memory).map(m => ({ ...m, isUpdated: m.name === ptrName })),
-          pointers: [{ from: ptrName, toAddr: target.address }],
-          terminal: [...terminal]
-        });
-      }
-      return;
-    }
-
-    // Pattern: *ptr = 99;
-    const ptrDeref = trimmed.match(/^\*([a-zA-Z_]\w*)\s*=\s*(-?\d+);/);
-    if (ptrDeref) {
-      const ptrName = ptrDeref[1];
-      const newVal = ptrDeref[2];
-      const ptr = memory[ptrName];
-
-      if (ptr && ptr.pointsTo) {
-        // Find target variable
-        const target = Object.values(memory).find(m => m.address === ptr.pointsTo);
-        if (target) {
-          target.value = newVal;
-          steps.push({
-            line: idx + 1,
-            explanation: `Dereference: *${ptrName} follows address ${ptr.pointsTo} and updates '${target.name}' to ${newVal}.`,
-            vivaTip: `<strong>Dereference:</strong> Modifying *${ptrName} changes the value in '${target.name}'.`,
-            stack: Object.values(memory).map(m => ({ ...m, isUpdated: m.name === target.name })),
-            pointers: [{ from: ptrName, toAddr: target.address }],
-            terminal: [...terminal]
-          });
-        }
-      }
-      return;
-    }
-
-    // Pattern: printf(...)
-    if (trimmed.includes("printf")) {
-      terminal.push("Custom execution output.");
-      steps.push({
-        line: idx + 1,
-        explanation: `printf() executed. Outputs string to stdout.`,
-        vivaTip: `<strong>Terminal I/O:</strong> Writes text to stdout stream.`,
-        stack: Object.values(memory),
-        terminal: [...terminal]
-      });
-    }
-  });
-
-  window.customSteps = steps;
-  stepSlider.max = Math.max(0, steps.length - 1);
-  stepSlider.value = 0;
-  currentStepIndex = 0;
-  renderCurrentStep();
-}
-
-/**
- * Event Listeners Setup
+ * Event Listeners
  */
 function setupEventListeners() {
-  presetSelect.addEventListener("change", (e) => loadPreset(e.target.value));
+  programSelect.addEventListener("change", (e) => loadProgram(e.target.value));
 
   playPauseBtn.addEventListener("click", togglePlayPause);
 
   stepNextBtn.addEventListener("click", () => {
     pauseAnimation();
-    const steps = getCurrentSteps();
-    if (currentStepIndex < steps.length - 1) {
+    const p = LAB_PROGRAMS[currentProgramKey];
+    if (currentStepIndex < p.steps.length - 1) {
       currentStepIndex++;
       renderCurrentStep();
     }
@@ -589,24 +347,37 @@ function setupEventListeners() {
   });
 
   clearConsoleBtn.addEventListener("click", () => {
-    terminalOutput.innerHTML = `<span class="terminal-prompt">$ ./program</span>`;
+    terminalOutput.innerHTML = `<span class="terminal-prompt">C:\\TURBOC3\\BIN\\TC.EXE</span>`;
   });
 
-  // Modal Controls
-  examTipsBtn.addEventListener("click", () => vivaModal.classList.remove("hidden"));
+  // Tab switching
+  tabRolesBtn.addEventListener("click", () => {
+    tabRolesBtn.classList.add("active");
+    tabMemoryBtn.classList.remove("active");
+    tabRolesContent.classList.remove("hidden");
+    tabRolesContent.classList.add("active-content");
+    tabMemoryContent.classList.add("hidden");
+    tabMemoryContent.classList.remove("active-content");
+  });
+
+  tabMemoryBtn.addEventListener("click", () => {
+    tabMemoryBtn.classList.add("active");
+    tabRolesBtn.classList.remove("active");
+    tabMemoryContent.classList.remove("hidden");
+    tabMemoryContent.classList.add("active-content");
+    tabRolesContent.classList.add("hidden");
+    tabRolesContent.classList.remove("active-content");
+  });
+
+  // Modal
+  vivaModalBtn.addEventListener("click", () => vivaModal.classList.remove("hidden"));
   closeModalBtn.addEventListener("click", () => vivaModal.classList.add("hidden"));
   vivaModal.addEventListener("click", (e) => {
     if (e.target === vivaModal) vivaModal.classList.add("hidden");
   });
 
-  // Custom editor input change
-  customCodeEditor.addEventListener("input", () => {
-    parseAndLoadCustomCode();
-  });
-
   // Keyboard navigation
   window.addEventListener("keydown", (e) => {
-    if (document.activeElement === customCodeEditor) return;
     if (e.key === "ArrowRight") {
       stepNextBtn.click();
     } else if (e.key === "ArrowLeft") {
@@ -618,5 +389,4 @@ function setupEventListeners() {
   });
 }
 
-// Start app
 document.addEventListener("DOMContentLoaded", init);
