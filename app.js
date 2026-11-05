@@ -1,5 +1,6 @@
 /**
  * C-Viz Main Application Controller — Complete Line-by-Line Turbo C Lab Edition
+ * Fixed: Independent VR-like Pane Scrolling & Click-to-Reveal Explanation
  */
 
 // State
@@ -9,6 +10,7 @@ let isPlaying = false;
 let playInterval = null;
 let playSpeed = 1500;
 let currentCodeLines = [];
+let hasUserClickedLine = false;
 
 // DOM Elements
 const programSelect = document.getElementById("programSelect");
@@ -21,6 +23,8 @@ const stepSlider = document.getElementById("stepSlider");
 const speedSelect = document.getElementById("speedSelect");
 
 // Inspector Elements
+const inspectorPlaceholder = document.getElementById("inspectorPlaceholder");
+const inspectorDetails = document.getElementById("inspectorDetails");
 const inspectorLineBadge = document.getElementById("inspectorLineBadge");
 const inspectorLineTitle = document.getElementById("inspectorLineTitle");
 const inspectorCodePreview = document.getElementById("inspectorCodePreview");
@@ -64,7 +68,12 @@ function init() {
 function loadProgram(key) {
   currentProgramKey = key;
   currentLineIndex = 0;
+  hasUserClickedLine = false;
   pauseAnimation();
+
+  // Reset inspector to placeholder initially
+  inspectorPlaceholder.classList.remove("hidden");
+  inspectorDetails.classList.add("hidden");
 
   const prog = LAB_PROGRAMS[key];
   if (!prog) return;
@@ -79,8 +88,10 @@ function loadProgram(key) {
 
   stepSlider.max = Math.max(0, currentCodeLines.length - 1);
   stepSlider.value = 0;
+  stepCounter.textContent = `Line 1 / ${currentCodeLines.length}`;
 
-  inspectLine(0);
+  // Initial update of memory without auto-scrolling
+  updateMemorySimulation(0);
 }
 
 /**
@@ -106,9 +117,11 @@ function renderCodeLines(lines) {
     lineDiv.appendChild(numSpan);
     lineDiv.appendChild(contentSpan);
 
+    // CLICK HANDLER: Reveal explanation only when clicked!
     lineDiv.addEventListener("click", () => {
       pauseAnimation();
-      inspectLine(idx);
+      hasUserClickedLine = true;
+      inspectLine(idx, true); // true = scroll code if out of view
     });
 
     codeLinesContainer.appendChild(lineDiv);
@@ -152,9 +165,11 @@ function renderAllLinesCards(lines) {
       <div class="line-card-viva"><strong>🎓 Viva Point:</strong> ${info.vivaTip}</div>
     `;
 
+    // Click card: highlights line without aggressively scrolling left pane
     card.addEventListener("click", () => {
       pauseAnimation();
-      inspectLine(idx);
+      hasUserClickedLine = true;
+      inspectLine(idx, false); // false = DO NOT force scroll left code!
     });
 
     allLinesCardsContainer.appendChild(card);
@@ -163,8 +178,10 @@ function renderAllLinesCards(lines) {
 
 /**
  * Inspect a Specific Line (Updates Inspector Box & Highlights)
+ * @param {number} index - Line index
+ * @param {boolean} shouldScrollCode - Whether to scroll the left code editor
  */
-function inspectLine(index) {
+function inspectLine(index, shouldScrollCode = false) {
   if (index < 0) index = 0;
   if (index >= currentCodeLines.length) index = currentCodeLines.length - 1;
   currentLineIndex = index;
@@ -182,33 +199,45 @@ function inspectLine(index) {
   const activeLineEl = document.querySelector(`.code-line[data-line-index="${index}"]`);
   if (activeLineEl) {
     activeLineEl.classList.add("active-line");
-    activeLineEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
+
+    // Only scroll internally inside .code-container if explicitly requested (e.g. Play/Next button)
+    if (shouldScrollCode) {
+      const container = activeLineEl.closest(".code-container");
+      if (container) {
+        const topDiff = activeLineEl.offsetTop - container.scrollTop;
+        if (topDiff < 0 || topDiff > container.clientHeight - 40) {
+          container.scrollTo({ top: activeLineEl.offsetTop - 60, behavior: "smooth" });
+        }
+      }
+    }
   }
 
-  // Highlight in Right Tab 1 Cards
+  // Highlight matching card in Right Tab 1 (without moving the left side)
   document.querySelectorAll(".line-card").forEach(c => c.classList.remove("active-card"));
   const activeCardEl = document.getElementById(`line-card-${index}`);
   if (activeCardEl) {
     activeCardEl.classList.add("active-card");
-    if (tabAllLinesBtn.classList.contains("active")) {
-      activeCardEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
-    }
   }
 
-  // Update Left Inspector Box
-  inspectorLineBadge.textContent = `Line ${lineNum}`;
-  inspectorLineTitle.textContent = info.title;
-  inspectorCodePreview.textContent = lineText.trim() || "(blank line)";
-  inspectorSimpleText.textContent = info.simple;
-  inspectorUnderTheHood.textContent = info.underTheHood;
-  inspectorVivaTip.textContent = info.vivaTip;
+  // Reveal Inspector Content when clicked
+  if (hasUserClickedLine) {
+    inspectorPlaceholder.classList.add("hidden");
+    inspectorDetails.classList.remove("hidden");
+
+    inspectorLineBadge.textContent = `Line ${lineNum}`;
+    inspectorLineTitle.textContent = info.title;
+    inspectorCodePreview.textContent = lineText.trim() || "(blank line)";
+    inspectorSimpleText.textContent = info.simple;
+    inspectorUnderTheHood.textContent = info.underTheHood;
+    inspectorVivaTip.textContent = info.vivaTip;
+  }
 
   // Update RAM simulation
   updateMemorySimulation(index);
 }
 
 /**
- * Update RAM Memory Simulation based on line position
+ * Update RAM Memory Simulation
  */
 function updateMemorySimulation(index) {
   const prog = LAB_PROGRAMS[currentProgramKey];
@@ -217,7 +246,6 @@ function updateMemorySimulation(index) {
   const steps = prog.steps || [];
   if (steps.length === 0) return;
 
-  // Find step closest to this line
   let activeStep = steps[0];
   for (let s of steps) {
     if (s.line <= index + 1) {
@@ -225,7 +253,6 @@ function updateMemorySimulation(index) {
     }
   }
 
-  // Render Stack
   renderStack(activeStep.stack || []);
   renderTerminal(activeStep.terminal || []);
 }
@@ -329,6 +356,7 @@ function togglePlayPause() {
 }
 
 function startAnimation() {
+  hasUserClickedLine = true;
   if (currentLineIndex >= currentCodeLines.length - 1) {
     currentLineIndex = 0;
   }
@@ -339,7 +367,7 @@ function startAnimation() {
   playInterval = setInterval(() => {
     if (currentLineIndex < currentCodeLines.length - 1) {
       currentLineIndex++;
-      inspectLine(currentLineIndex);
+      inspectLine(currentLineIndex, true);
     } else {
       pauseAnimation();
     }
@@ -364,23 +392,26 @@ function setupEventListeners() {
 
   stepNextBtn.addEventListener("click", () => {
     pauseAnimation();
+    hasUserClickedLine = true;
     if (currentLineIndex < currentCodeLines.length - 1) {
       currentLineIndex++;
-      inspectLine(currentLineIndex);
+      inspectLine(currentLineIndex, true);
     }
   });
 
   stepPrevBtn.addEventListener("click", () => {
     pauseAnimation();
+    hasUserClickedLine = true;
     if (currentLineIndex > 0) {
       currentLineIndex--;
-      inspectLine(currentLineIndex);
+      inspectLine(currentLineIndex, true);
     }
   });
 
   stepSlider.addEventListener("input", (e) => {
     pauseAnimation();
-    inspectLine(parseInt(e.target.value));
+    hasUserClickedLine = true;
+    inspectLine(parseInt(e.target.value), true);
   });
 
   speedSelect.addEventListener("change", (e) => {
@@ -393,7 +424,10 @@ function setupEventListeners() {
 
   resetBtn.addEventListener("click", () => {
     pauseAnimation();
-    inspectLine(0);
+    hasUserClickedLine = false;
+    inspectorPlaceholder.classList.remove("hidden");
+    inspectorDetails.classList.add("hidden");
+    inspectLine(0, true);
   });
 
   clearConsoleBtn.addEventListener("click", () => {

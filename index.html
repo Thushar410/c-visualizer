@@ -9,7 +9,7 @@
   <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body class="bg-dark text-light antialiased">
-  <!-- Top Navigation Bar -->
+  <!-- Top Navigation Bar (Fixed 56px) -->
   <header class="header">
     <div class="logo-area">
       <div class="logo-icon">C</div>
@@ -59,9 +59,9 @@
     </div>
   </header>
 
-  <!-- Main Layout -->
+  <!-- Main Independent Split Layout -->
   <main class="main-layout">
-    <!-- Left Column: Source Code & Line Inspector -->
+    <!-- Left Column: Source Code & On-Click Line Inspector -->
     <section class="panel panel-code">
       <div class="panel-header">
         <span class="panel-title"><i data-lucide="file-code"></i> Turbo C Source Code</span>
@@ -102,35 +102,42 @@
         </div>
       </div>
 
-      <!-- Dedicated Active Line Inspector Box -->
+      <!-- Dedicated Active Line Inspector Box (Opens on click) -->
       <div class="inspector-box" id="inspectorBox">
-        <div class="inspector-header">
-          <span id="inspectorLineBadge" class="inspector-badge">Line 1</span>
-          <span id="inspectorLineTitle" class="inspector-title">Line Explanation</span>
+        <div id="inspectorPlaceholder" class="inspector-placeholder">
+          <i data-lucide="mouse-pointer-click"></i>
+          <span><strong>Click any line of code above</strong> to see what it does, how Turbo C executes it, and exam viva questions!</span>
         </div>
-        
-        <div class="inspector-content">
-          <div class="inspector-code-preview" id="inspectorCodePreview">#include &lt;stdio.h&gt;</div>
+
+        <div id="inspectorDetails" class="hidden">
+          <div class="inspector-header">
+            <span id="inspectorLineBadge" class="inspector-badge">Line 1</span>
+            <span id="inspectorLineTitle" class="inspector-title">Line Explanation</span>
+          </div>
           
-          <div class="inspector-field">
-            <span class="field-label"><i data-lucide="check-circle" class="icon-accent"></i> What this line does (Simple English):</span>
-            <p id="inspectorSimpleText" class="field-value">Includes the standard input/output library.</p>
-          </div>
+          <div class="inspector-content">
+            <div class="inspector-code-preview" id="inspectorCodePreview">#include &lt;stdio.h&gt;</div>
+            
+            <div class="inspector-field">
+              <span class="field-label"><i data-lucide="check-circle" class="icon-accent"></i> What this line does (Simple English):</span>
+              <p id="inspectorSimpleText" class="field-value">Includes the standard input/output library.</p>
+            </div>
 
-          <div class="inspector-field">
-            <span class="field-label"><i data-lucide="cpu" class="icon-purple"></i> Turbo C &amp; Hardware Background Action:</span>
-            <p id="inspectorUnderTheHood" class="field-value">Preprocessor parses header declarations before compiling.</p>
-          </div>
+            <div class="inspector-field">
+              <span class="field-label"><i data-lucide="cpu" class="icon-purple"></i> Turbo C &amp; Hardware Background Action:</span>
+              <p id="inspectorUnderTheHood" class="field-value">Preprocessor parses header declarations before compiling.</p>
+            </div>
 
-          <div class="inspector-field">
-            <span class="field-label"><i data-lucide="award" class="icon-gold"></i> Examiner Viva Question on this line:</span>
-            <p id="inspectorVivaTip" class="field-value">What does stdio stand for? Standard Input Output.</p>
+            <div class="inspector-field">
+              <span class="field-label"><i data-lucide="award" class="icon-gold"></i> Examiner Viva Question on this line:</span>
+              <p id="inspectorVivaTip" class="field-value">What does stdio stand for? Standard Input Output.</p>
+            </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Right Column: 3 Study Tabs -->
+    <!-- Right Column: 3 Study Tabs (Independent Scroll Area) -->
     <section class="panel panel-visualizer">
       <div class="panel-tabs">
         <button id="tabAllLinesBtn" class="panel-tab active"><i data-lucide="list"></i> Every Line Explained</button>
@@ -142,7 +149,7 @@
       <div id="tabAllLinesContent" class="tab-content active-content">
         <div class="turboc-banner">
           <i data-lucide="help-circle" class="icon-accent"></i>
-          <span>Click on any card below (or click a line in the code editor on the left) to jump directly to it!</span>
+          <span>Click on any card below (or click a line in the code on the left) to view its deep explanation!</span>
         </div>
         <div id="allLinesCardsContainer" class="all-lines-list">
           <!-- Dynamically populated with a card for every single line of code! -->
